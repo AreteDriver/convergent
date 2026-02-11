@@ -9,7 +9,7 @@ Python implementation for development and testing.
 from __future__ import annotations
 
 import logging
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from convergent.intent import (
     Adjustment,
@@ -19,6 +19,9 @@ from convergent.intent import (
     InterfaceSpec,
     ResolutionResult,
 )
+
+if TYPE_CHECKING:
+    from convergent.semantic import SemanticMatcher, TrajectoryPrediction
 
 logger = logging.getLogger(__name__)
 
@@ -92,15 +95,22 @@ class IntentResolver:
     2. Interface mismatches (signatures don't match)
     3. Applicable constraints (other agents' decisions constrain mine)
     4. Conflicts (irreconcilable differences)
+
+    Optionally enhanced with LLM-powered semantic matching when a
+    SemanticMatcher is provided.
     """
 
     def __init__(
         self,
         backend: GraphBackend | None = None,
         min_stability: float = 0.3,
+        semantic_matcher: SemanticMatcher | None = None,
+        semantic_confidence_threshold: float = 0.7,
     ) -> None:
         self.backend: GraphBackend = backend or PythonGraphBackend()
         self.min_stability = min_stability
+        self.semantic_matcher = semantic_matcher
+        self.semantic_confidence_threshold = semantic_confidence_threshold
 
     def publish(self, intent: Intent) -> float:
         """Publish an intent to the shared graph. Returns computed stability."""
@@ -119,8 +129,9 @@ class IntentResolver:
         my_specs = intent.provides + intent.requires
         my_stability = intent.compute_stability()
 
-        # 1. Find overlapping intents from other agents
+        # ── 1. Structural overlap detection (Phase 1) ──────────────────
         overlapping = self.backend.find_overlapping(my_specs, intent.agent_id, self.min_stability)
+        structurally_overlapping_ids: set[str] = {o.id for o in overlapping}
 
         for other in overlapping:
             other_stability = other.compute_stability()
@@ -139,6 +150,7 @@ class IntentResolver:
                                         f"{other.agent_id} (stability {other_stability:.2f})"
                                     ),
                                     source_intent_id=other.id,
+                                    confidence=1.0,
                                 )
                             )
                         else:
@@ -155,6 +167,7 @@ class IntentResolver:
                                     resolution_suggestion=(
                                         "Higher stability should provide; other should consume"
                                     ),
+                                    confidence=1.0,
                                 )
                             )
 
@@ -176,17 +189,80 @@ class IntentResolver:
                                     f"they provide '{their_prov.signature}'"
                                 ),
                                 source_intent_id=other.id,
+                                confidence=1.0,
                             )
                         )
 
-        # 2. Find applicable constraints from other agents
-        all_intents = self.backend.query_all(self.min_stability)
-        for other in all_intents:
+        # ── 2. LLM-enhanced overlap detection (Phase 2) ───────────────
+        if self.semantic_matcher is not None:
+            all_intents = self.backend.query_all(self.min_stability)
+            non_overlapping = [
+                o for o in all_intents
+                if o.agent_id != intent.agent_id and o.id not in structurally_overlapping_ids
+            ]
+
+            # Build pairs for batch checking
+            pairs: list[tuple[dict, dict]] = []
+            pair_context: list[tuple[InterfaceSpec, InterfaceSpec, Intent]] = []
+            for other in non_overlapping:
+                for my_prov in intent.provides:
+                    for their_prov in other.provides:
+                        pairs.append((my_prov.to_dict(), their_prov.to_dict()))
+                        pair_context.append((my_prov, their_prov, other))
+
+            if pairs:
+                matches = self.semantic_matcher.check_overlap_batch(pairs)
+                for match, (my_prov, their_prov, other) in zip(matches, pair_context):
+                    if match.overlap and match.confidence >= self.semantic_confidence_threshold:
+                        other_stability = other.compute_stability()
+                        if other_stability > my_stability:
+                            adjustments.append(
+                                Adjustment(
+                                    kind="ConsumeInstead",
+                                    description=(
+                                        f"Drop '{my_prov.name}', consume "
+                                        f"'{their_prov.name}' from agent "
+                                        f"{other.agent_id} (stability "
+                                        f"{other_stability:.2f}) "
+                                        f"[semantic: {match.reasoning}]"
+                                    ),
+                                    source_intent_id=other.id,
+                                    confidence=match.confidence,
+                                )
+                            )
+                        else:
+                            conflicts.append(
+                                ConflictReport(
+                                    my_intent_id=intent.id,
+                                    their_intent_id=other.id,
+                                    description=(
+                                        f"Both provide '{my_prov.name}' / "
+                                        f"'{their_prov.name}' — "
+                                        f"my stability {my_stability:.2f} vs "
+                                        f"their {other_stability:.2f} "
+                                        f"[semantic: {match.reasoning}]"
+                                    ),
+                                    their_stability=other_stability,
+                                    resolution_suggestion=(
+                                        "Higher stability should provide; other should consume"
+                                    ),
+                                    confidence=match.confidence,
+                                )
+                            )
+
+        # ── 3. Structural constraint checking (Phase 1) ────────────────
+        all_intents_for_constraints = self.backend.query_all(self.min_stability)
+        structurally_applied_constraints: set[tuple[str, str]] = set()
+
+        for other in all_intents_for_constraints:
             if other.agent_id == intent.agent_id:
                 continue
 
             for constraint in other.constraints:
                 if constraint.applies_to(intent):
+                    constraint_key = (constraint.target, constraint.requirement)
+                    structurally_applied_constraints.add(constraint_key)
+
                     # Check for conflicts with our constraints
                     has_conflict = any(mc.conflicts_with(constraint) for mc in intent.constraints)
 
@@ -199,6 +275,7 @@ class IntentResolver:
                                 description=(f"Constraint conflict on '{constraint.target}'"),
                                 their_stability=other_stability,
                                 resolution_suggestion=("Higher stability constraint should win"),
+                                confidence=1.0,
                             )
                         )
                     else:
@@ -211,10 +288,63 @@ class IntentResolver:
                                     f"{constraint.requirement}"
                                 ),
                                 source_intent_id=other.id,
+                                confidence=1.0,
                             )
                         )
 
-        result = ResolutionResult(
+        # ── 4. LLM-enhanced constraint checking (Phase 2) ─────────────
+        if self.semantic_matcher is not None:
+            for other in all_intents_for_constraints:
+                if other.agent_id == intent.agent_id:
+                    continue
+
+                for constraint in other.constraints:
+                    constraint_key = (constraint.target, constraint.requirement)
+                    if constraint_key in structurally_applied_constraints:
+                        continue  # Already handled structurally
+
+                    result = self.semantic_matcher.check_constraint_applies(
+                        constraint.to_dict(),
+                        intent.to_dict(),
+                    )
+                    if result.applies and result.confidence >= self.semantic_confidence_threshold:
+                        has_conflict = any(
+                            mc.conflicts_with(constraint) for mc in intent.constraints
+                        )
+
+                        if has_conflict:
+                            other_stability = other.compute_stability()
+                            conflicts.append(
+                                ConflictReport(
+                                    my_intent_id=intent.id,
+                                    their_intent_id=other.id,
+                                    description=(
+                                        f"Constraint conflict on '{constraint.target}' "
+                                        f"[semantic: {result.reasoning}]"
+                                    ),
+                                    their_stability=other_stability,
+                                    resolution_suggestion=(
+                                        "Higher stability constraint should win"
+                                    ),
+                                    confidence=result.confidence,
+                                )
+                            )
+                        else:
+                            adopted_constraints.append(constraint)
+                            adjustments.append(
+                                Adjustment(
+                                    kind="AdoptConstraint",
+                                    description=(
+                                        f"Adopt constraint: {constraint.target} — "
+                                        f"{constraint.requirement} "
+                                        f"[semantic: {result.reasoning}]"
+                                    ),
+                                    source_intent_id=other.id,
+                                    confidence=result.confidence,
+                                )
+                            )
+
+        resolution = ResolutionResult(
             original_intent_id=intent.id,
             adjustments=adjustments,
             conflicts=conflicts,
@@ -226,7 +356,38 @@ class IntentResolver:
             f"{len(adjustments)} adjustments, {len(conflicts)} conflicts"
         )
 
-        return result
+        return resolution
+
+    def predict_trajectories(
+        self, agent_ids: list[str] | None = None
+    ) -> dict[str, TrajectoryPrediction]:
+        """Predict future moves for agents based on their intent history.
+
+        Returns empty dict if no semantic_matcher is configured.
+        """
+        from convergent.semantic import TrajectoryPrediction  # noqa: F811
+
+        if self.semantic_matcher is None:
+            return {}
+
+        all_intents = self.backend.query_all()
+        agents: dict[str, list[Intent]] = {}
+        for intent in all_intents:
+            agents.setdefault(intent.agent_id, []).append(intent)
+
+        target_ids = agent_ids if agent_ids is not None else list(agents.keys())
+        results: dict[str, TrajectoryPrediction] = {}
+
+        for aid in target_ids:
+            history = agents.get(aid)
+            if not history:
+                continue
+            prediction = self.semantic_matcher.predict_trajectory(
+                [i.to_dict() for i in history]
+            )
+            results[aid] = prediction
+
+        return results
 
     @property
     def intent_count(self) -> int:

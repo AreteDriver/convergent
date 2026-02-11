@@ -124,7 +124,7 @@ T=4  All agents complete. Intent graph shows no conflicts.
 
 ## Project Status
 
-**Phase 1: Core Library** ← Current
+**Phase 1: Core Library**
 - [x] IntentGraph (Rust + SQLite)
 - [x] IntentNode schema
 - [x] StabilityScorer
@@ -133,10 +133,10 @@ T=4  All agents complete. Intent graph shows no conflicts.
 - [x] Convergence test suite
 - [x] Semantic matching (structural, non-LLM)
 
-**Phase 2: Intelligence**
-- [ ] LLM-powered semantic overlap detection
-- [ ] Predictive convergence (anticipate other agents' trajectories)
-- [ ] Confidence-scored auto-resolution
+**Phase 2: Intelligence** ← Current
+- [x] LLM-powered semantic overlap detection
+- [x] Predictive convergence (anticipate other agents' trajectories)
+- [x] Confidence-scored auto-resolution
 
 **Phase 3: Gorgon Integration**
 - [ ] Import as dependency in Gorgon orchestrator

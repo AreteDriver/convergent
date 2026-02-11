@@ -20,16 +20,26 @@ from convergent.matching import (
     signatures_compatible,
 )
 from convergent.resolver import IntentResolver
+from convergent.semantic import (
+    ConstraintApplicability,
+    SemanticMatch,
+    SemanticMatcher,
+    TrajectoryPrediction,
+)
 
 __all__ = [
     "Constraint",
+    "ConstraintApplicability",
     "ConstraintSeverity",
     "Evidence",
     "EvidenceKind",
     "Intent",
+    "IntentResolver",
     "InterfaceKind",
     "InterfaceSpec",
-    "IntentResolver",
+    "SemanticMatch",
+    "SemanticMatcher",
+    "TrajectoryPrediction",
     "names_overlap",
     "normalize_constraint_target",
     "normalize_name",
@@ -37,3 +47,11 @@ __all__ = [
     "parse_signature",
     "signatures_compatible",
 ]
+
+# Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
+try:
+    from convergent.semantic import AnthropicSemanticMatcher  # noqa: F401
+
+    __all__.append("AnthropicSemanticMatcher")
+except ImportError:
+    pass

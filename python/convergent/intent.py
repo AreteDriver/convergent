@@ -202,6 +202,7 @@ class Adjustment:
     kind: str  # "ConsumeInstead", "AdoptConstraint", "YieldTo", "AdaptSignature"
     description: str
     source_intent_id: str
+    confidence: float = 1.0
 
 
 @dataclass
@@ -213,6 +214,7 @@ class ConflictReport:
     description: str
     their_stability: float
     resolution_suggestion: str
+    confidence: float = 1.0
 
 
 @dataclass
@@ -231,3 +233,15 @@ class ResolutionResult:
     @property
     def has_adjustments(self) -> bool:
         return len(self.adjustments) > 0
+
+    @property
+    def min_confidence(self) -> float:
+        """Return the lowest confidence score across all adjustments and conflicts."""
+        scores = [a.confidence for a in self.adjustments] + [
+            c.confidence for c in self.conflicts
+        ]
+        return min(scores) if scores else 1.0
+
+    def adjustments_above(self, threshold: float) -> list[Adjustment]:
+        """Return only adjustments with confidence >= threshold."""
+        return [a for a in self.adjustments if a.confidence >= threshold]
