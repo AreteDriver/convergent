@@ -1,4 +1,5 @@
 pub mod graph;
+pub mod matching;
 pub mod models;
 pub mod stability;
 

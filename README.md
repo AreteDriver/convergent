@@ -131,7 +131,7 @@ T=4  All agents complete. Intent graph shows no conflicts.
 - [x] IntentResolver
 - [x] Simulated agent harness
 - [x] Convergence test suite
-- [ ] Semantic matching (structural, non-LLM)
+- [x] Semantic matching (structural, non-LLM)
 
 **Phase 2: Intelligence**
 - [ ] LLM-powered semantic overlap detection

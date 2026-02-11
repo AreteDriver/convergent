@@ -11,6 +11,14 @@ from convergent.intent import (
     InterfaceKind,
     InterfaceSpec,
 )
+from convergent.matching import (
+    names_overlap,
+    normalize_constraint_target,
+    normalize_name,
+    normalize_type,
+    parse_signature,
+    signatures_compatible,
+)
 from convergent.resolver import IntentResolver
 
 __all__ = [
@@ -22,4 +30,10 @@ __all__ = [
     "InterfaceKind",
     "InterfaceSpec",
     "IntentResolver",
+    "names_overlap",
+    "normalize_constraint_target",
+    "normalize_name",
+    "normalize_type",
+    "parse_signature",
+    "signatures_compatible",
 ]

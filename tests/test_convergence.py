@@ -18,6 +18,14 @@ from convergent.intent import (
     InterfaceKind,
     InterfaceSpec,
 )
+from convergent.matching import (
+    names_overlap,
+    normalize_constraint_target,
+    normalize_name,
+    normalize_type,
+    parse_signature,
+    signatures_compatible,
+)
 from convergent.resolver import IntentResolver
 
 
@@ -563,3 +571,172 @@ class TestSimulatedConvergence:
         b_log = result.agent_logs["agent-b"]
         adopt_adjustments = [a for a in b_log.adjustments_applied if a.kind == "AdoptConstraint"]
         assert len(adopt_adjustments) > 0, "Agent B should adopt the parameterized SQL constraint"
+
+
+class TestSemanticMatching:
+    """Test structural semantic matching — deterministic, no LLM."""
+
+    # ── Name normalization ──────────────────────────────────────────
+
+    def test_normalize_name_strips_model_suffix(self):
+        assert normalize_name("UserModel") == "user"
+
+    def test_normalize_name_strips_service_suffix(self):
+        assert normalize_name("AuthService") == "auth"
+
+    def test_normalize_name_camel_case_splitting(self):
+        assert normalize_name("MealPlanService") == "meal plan"
+        assert normalize_name("UserProfile") == "user profile"
+
+    def test_normalize_name_simple(self):
+        assert normalize_name("User") == "user"
+        assert normalize_name("user") == "user"
+
+    def test_normalize_name_empty(self):
+        assert normalize_name("") == ""
+
+    # ── Names overlap ───────────────────────────────────────────────
+
+    def test_names_overlap_after_suffix_stripping(self):
+        assert names_overlap("UserModel", "User")
+        assert names_overlap("AuthService", "Auth")
+
+    def test_names_overlap_prefix_match(self):
+        assert names_overlap("User", "UserProfile")
+
+    def test_names_overlap_containment(self):
+        assert names_overlap("auth", "AuthService")
+
+    def test_names_overlap_no_match(self):
+        assert not names_overlap("User", "Recipe")
+        assert not names_overlap("AuthService", "RecipeService")
+
+    def test_names_overlap_empty(self):
+        assert not names_overlap("", "User")
+        assert not names_overlap("User", "")
+
+    # ── Signature compatibility ─────────────────────────────────────
+
+    def test_signatures_compatible_exact(self):
+        assert signatures_compatible("id: UUID, email: str", "id: UUID, email: str")
+
+    def test_signatures_compatible_superset(self):
+        assert signatures_compatible(
+            "id: UUID, email: str", "id: UUID, email: str, name: str"
+        )
+
+    def test_signatures_compatible_type_aliases(self):
+        assert signatures_compatible("id: UUID, name: String", "id: uuid, name: str")
+        assert signatures_compatible("count: i64", "count: int")
+        assert signatures_compatible("score: f64", "score: float")
+
+    def test_signatures_compatible_optional(self):
+        assert signatures_compatible("name: str", "name: Optional[str]")
+        # Optional[str] normalizes to "str", which matches "str"
+
+    def test_signatures_compatible_containers(self):
+        assert signatures_compatible("items: Vec<String>", "items: list[str]")
+        assert signatures_compatible("items: List[str]", "items: list[str]")
+
+    def test_signatures_incompatible_missing_field(self):
+        assert not signatures_compatible("id: UUID, email: str", "id: UUID")
+
+    def test_signatures_incompatible_type_mismatch(self):
+        assert not signatures_compatible("id: UUID", "id: int")
+
+    def test_signatures_compatible_empty(self):
+        assert signatures_compatible("", "id: UUID")
+        assert signatures_compatible("", "")
+
+    def test_signatures_single_field(self):
+        assert signatures_compatible("id: UUID", "id: UUID")
+        assert not signatures_compatible("id: UUID", "id: int")
+
+    # ── Constraint target normalization ─────────────────────────────
+
+    def test_constraint_target_case_insensitive(self):
+        assert normalize_constraint_target("User Model") == normalize_constraint_target(
+            "user model"
+        )
+
+    def test_constraint_target_strips_model_suffix(self):
+        assert normalize_constraint_target("User Model") == "user"
+        assert normalize_constraint_target("user_model") == "user"
+
+    def test_constraint_target_strips_service_suffix(self):
+        assert normalize_constraint_target("user-service") == "user"
+
+    def test_constraint_target_whitespace_normalization(self):
+        assert normalize_constraint_target("User  Model") == normalize_constraint_target(
+            "User Model"
+        )
+        assert normalize_constraint_target("user_model") == normalize_constraint_target(
+            "user-model"
+        )
+
+    def test_constraint_target_empty(self):
+        assert normalize_constraint_target("") == ""
+
+    # ── Backward compatibility ──────────────────────────────────────
+
+    def test_exact_name_match_still_overlaps(self):
+        """Exact name matches that worked before still work."""
+        a = InterfaceSpec(name="User", kind=InterfaceKind.MODEL, signature="id: UUID")
+        b = InterfaceSpec(name="User", kind=InterfaceKind.MODEL, signature="id: int")
+        assert a.structurally_overlaps(b)
+
+    def test_exact_signature_still_compatible(self):
+        """Exact signature matches that worked before still work."""
+        a = InterfaceSpec(
+            name="User",
+            kind=InterfaceKind.MODEL,
+            signature="id: UUID, email: str",
+        )
+        b = InterfaceSpec(
+            name="User",
+            kind=InterfaceKind.MODEL,
+            signature="id: UUID, email: str",
+        )
+        assert a.signature_compatible(b)
+
+    def test_exact_constraint_conflict_still_detected(self):
+        """Exact constraint conflicts that worked before still work."""
+        c1 = Constraint(target="User.id", requirement="must be UUID")
+        c2 = Constraint(target="User.id", requirement="must be int")
+        assert c1.conflicts_with(c2)
+
+    # ── Integration: structural overlap with semantic matching ──────
+
+    def test_model_suffix_overlap_detected(self):
+        """UserModel and User should be detected as overlapping."""
+        a = InterfaceSpec(
+            name="UserModel",
+            kind=InterfaceKind.MODEL,
+            signature="id: UUID",
+        )
+        b = InterfaceSpec(
+            name="User",
+            kind=InterfaceKind.MODEL,
+            signature="id: UUID",
+        )
+        assert a.structurally_overlaps(b)
+
+    def test_service_suffix_overlap_detected(self):
+        """AuthService and Auth should be detected as overlapping."""
+        a = InterfaceSpec(
+            name="AuthService",
+            kind=InterfaceKind.CLASS,
+            signature="authenticate, create_token",
+        )
+        b = InterfaceSpec(
+            name="Auth",
+            kind=InterfaceKind.CLASS,
+            signature="authenticate",
+        )
+        assert a.structurally_overlaps(b)
+
+    def test_constraint_conflict_across_formats(self):
+        """Constraints with different formatting of same target should conflict."""
+        c1 = Constraint(target="User Model", requirement="must have email: str")
+        c2 = Constraint(target="user_model", requirement="must have username: str")
+        assert c1.conflicts_with(c2)

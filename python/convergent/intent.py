@@ -10,6 +10,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 
+from convergent.matching import (
+    names_overlap,
+    normalize_constraint_target,
+    signatures_compatible,
+)
+
 
 class InterfaceKind(str, Enum):
     FUNCTION = "function"
@@ -47,14 +53,14 @@ class InterfaceSpec:
 
     def structurally_overlaps(self, other: InterfaceSpec) -> bool:
         """Check if two interface specs likely refer to the same concept."""
-        if self.name == other.name:
+        if names_overlap(self.name, other.name):
             return True
         shared_tags = set(self.tags) & set(other.tags)
         return len(shared_tags) >= 2
 
     def signature_compatible(self, other: InterfaceSpec) -> bool:
-        """Check if signatures are compatible. Exact match for now."""
-        return self.signature == other.signature
+        """Check if signatures are compatible (superset with type normalization)."""
+        return signatures_compatible(self.signature, other.signature)
 
     def to_dict(self) -> dict:
         return {
@@ -83,8 +89,12 @@ class Constraint:
         return bool(set(self.affects_tags) & all_tags)
 
     def conflicts_with(self, other: Constraint) -> bool:
-        """Check if two constraints conflict."""
-        return self.target == other.target and self.requirement != other.requirement
+        """Check if two constraints conflict (normalized target comparison)."""
+        return (
+            normalize_constraint_target(self.target)
+            == normalize_constraint_target(other.target)
+            and self.requirement != other.requirement
+        )
 
     def to_dict(self) -> dict:
         return {

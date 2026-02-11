@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::matching;
+
 /// A single unit of semantic intent in the shared graph.
 /// Published by agents as they make architectural decisions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -120,9 +122,9 @@ impl InterfaceSpec {
         self
     }
 
-    /// Structural overlap: same name or overlapping tags
+    /// Structural overlap: name overlap or shared tags
     pub fn structurally_overlaps(&self, other: &InterfaceSpec) -> bool {
-        if self.name == other.name {
+        if matching::names_overlap(&self.name, &other.name) {
             return true;
         }
         // Check tag overlap — at least 2 shared tags indicates likely overlap
@@ -130,9 +132,9 @@ impl InterfaceSpec {
         shared_tags >= 2
     }
 
-    /// Signature compatibility: exact match for now, semantic matching later
+    /// Signature compatibility: superset check with type normalization
     pub fn signature_compatible(&self, other: &InterfaceSpec) -> bool {
-        self.signature == other.signature
+        matching::signatures_compatible(&self.signature, &other.signature)
     }
 }
 
@@ -196,10 +198,11 @@ impl Constraint {
             .any(|t| all_intent_tags.contains(&t.as_str()))
     }
 
-    /// Check if two constraints conflict
+    /// Check if two constraints conflict (normalized target comparison)
     pub fn conflicts_with(&self, other: &Constraint) -> bool {
-        // Same target, different requirements = potential conflict
-        self.target == other.target && self.requirement != other.requirement
+        matching::normalize_constraint_target(&self.target)
+            == matching::normalize_constraint_target(&other.target)
+            && self.requirement != other.requirement
     }
 }
 
