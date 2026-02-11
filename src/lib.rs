@@ -258,7 +258,12 @@ fn list_to_interface_specs(list: &Bound<'_, PyList>) -> PyResult<Vec<InterfaceSp
             "endpoint" => InterfaceKind::Endpoint,
             "migration" => InterfaceKind::Migration,
             "config" => InterfaceKind::Config,
-            _ => InterfaceKind::Function,
+            other => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Unknown InterfaceKind: '{}'. Expected one of: function, class, model, endpoint, migration, config",
+                    other
+                )));
+            }
         };
 
         let mut spec = InterfaceSpec::new(&name, kind, &signature);
@@ -319,10 +324,17 @@ fn list_to_evidence(list: &Bound<'_, PyList>) -> PyResult<Vec<Evidence>> {
 
         let ev = match kind_str.as_str() {
             "test_pass" => Evidence::test_pass(&description),
+            "test_fail" => Evidence::conflict(&description), // test_fail treated as negative evidence
             "code_committed" => Evidence::code_committed(&description),
             "consumed_by" => Evidence::consumed_by(&description),
             "conflict" => Evidence::conflict(&description),
-            _ => Evidence::test_pass(&description),
+            "manual_approval" => Evidence::manual_approval(),
+            other => {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Unknown EvidenceKind: '{}'. Expected one of: test_pass, test_fail, code_committed, consumed_by, conflict, manual_approval",
+                    other
+                )));
+            }
         };
         evidence.push(ev);
     }

@@ -10,6 +10,16 @@ use crate::stability::StabilityScorer;
 
 /// The shared intent graph. Append-only, SQLite-backed.
 /// All agents read from and write to this structure.
+///
+/// # Interior mutability
+///
+/// Methods like [`publish`](Self::publish) take `&self` despite mutating SQLite.
+/// This is intentional: SQLite provides its own internal locking and transaction
+/// safety, making the `Connection` effectively an interior-mutable handle (like
+/// `RefCell` but with database-level guarantees). Using `&self` allows multiple
+/// readers to coexist with a single writer without requiring `&mut self` at the
+/// Rust level, which mirrors the actual concurrency model of the graph — many
+/// agents reading, one writing at a time, serialized by SQLite's WAL.
 pub struct IntentGraph {
     conn: Connection,
     scorer: StabilityScorer,
@@ -59,6 +69,21 @@ impl IntentGraph {
             CREATE INDEX IF NOT EXISTS idx_intents_agent ON intents(agent_id);
             CREATE INDEX IF NOT EXISTS idx_intents_stability ON intents(computed_stability);
             CREATE INDEX IF NOT EXISTS idx_intents_timestamp ON intents(timestamp);
+
+            -- Denormalized interface lookup table for O(1) overlap queries.
+            -- Avoids deserializing all intent JSON to check structural overlap.
+            CREATE TABLE IF NOT EXISTS intent_interfaces (
+                intent_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                normalized_name TEXT NOT NULL,
+                role TEXT NOT NULL,           -- 'provides' or 'requires'
+                tags TEXT NOT NULL,           -- space-separated for FTS-like matching
+                FOREIGN KEY (intent_id) REFERENCES intents(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ifaces_name ON intent_interfaces(normalized_name);
+            CREATE INDEX IF NOT EXISTS idx_ifaces_agent ON intent_interfaces(agent_id);
+            CREATE INDEX IF NOT EXISTS idx_ifaces_intent ON intent_interfaces(intent_id);
             ",
         )?;
         Ok(())
@@ -66,11 +91,14 @@ impl IntentGraph {
 
     /// Publish an intent to the graph. Append-only — once published, cannot be modified.
     /// Returns the computed stability score.
+    ///
+    /// Also populates the denormalized `intent_interfaces` table for fast
+    /// overlap queries (see [`find_overlapping`](Self::find_overlapping)).
     pub fn publish(&self, intent: &IntentNode) -> SqlResult<f64> {
         let computed_stability = self.scorer.compute(intent);
 
         self.conn.execute(
-            "INSERT INTO intents (id, agent_id, timestamp, intent, provides, requires, 
+            "INSERT INTO intents (id, agent_id, timestamp, intent, provides, requires,
              constraints, stability, evidence, parent_id, computed_stability)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             params![
@@ -88,7 +116,30 @@ impl IntentGraph {
             ],
         )?;
 
+        // Populate denormalized interface lookup table
+        self.index_interfaces(intent, "provides", &intent.provides)?;
+        self.index_interfaces(intent, "requires", &intent.requires)?;
+
         Ok(computed_stability)
+    }
+
+    /// Insert denormalized interface entries for fast overlap lookup.
+    fn index_interfaces(
+        &self,
+        intent: &IntentNode,
+        role: &str,
+        specs: &[InterfaceSpec],
+    ) -> SqlResult<()> {
+        for spec in specs {
+            let normalized = crate::matching::normalize_name(&spec.name);
+            let tags_str = spec.tags.join(" ");
+            self.conn.execute(
+                "INSERT INTO intent_interfaces (intent_id, agent_id, normalized_name, role, tags)
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![intent.id, intent.agent_id, normalized, role, tags_str],
+            )?;
+        }
+        Ok(())
     }
 
     /// Query all intents, optionally filtered by minimum stability.
@@ -155,20 +206,86 @@ impl IntentGraph {
 
     /// Find all intents that provide or require interfaces overlapping with the given specs.
     /// This is the core query for the intent resolver.
+    ///
+    /// Uses the denormalized `intent_interfaces` table for a fast first-pass
+    /// candidate filter (indexed name/tag lookup), then validates candidates
+    /// with full structural overlap checks. This avoids the O(n) JSON
+    /// deserialization scan that the naive approach requires.
     pub fn find_overlapping(
         &self,
         specs: &[InterfaceSpec],
         exclude_agent: &str,
         min_stability: f64,
     ) -> SqlResult<Vec<IntentNode>> {
-        // Get all intents from other agents above stability threshold
-        let all = self.query_all(Some(min_stability))?;
+        if specs.is_empty() {
+            return Ok(Vec::new());
+        }
 
-        let overlapping: Vec<IntentNode> = all
+        // Phase 1: Fast indexed candidate lookup via denormalized table.
+        // Find intent IDs that have matching normalized names or >=2 shared tags.
+        let mut candidate_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+        for spec in specs {
+            let normalized = crate::matching::normalize_name(&spec.name);
+
+            // Name-based candidates: normalized name overlap
+            let mut name_stmt = self.conn.prepare(
+                "SELECT DISTINCT ii.intent_id
+                 FROM intent_interfaces ii
+                 JOIN intents i ON i.id = ii.intent_id
+                 WHERE ii.agent_id != ?1
+                   AND i.computed_stability >= ?2
+                   AND (ii.normalized_name = ?3
+                        OR ii.normalized_name LIKE ?4
+                        OR ?3 LIKE '%' || ii.normalized_name || '%')",
+            )?;
+
+            let pattern = format!("%{}%", normalized);
+            let rows = name_stmt.query_map(
+                params![exclude_agent, min_stability, normalized, pattern],
+                |row| row.get::<_, String>(0),
+            )?;
+            for row in rows {
+                if let Ok(id) = row {
+                    candidate_ids.insert(id);
+                }
+            }
+
+            // Tag-based candidates: >=2 shared tags
+            if spec.tags.len() >= 2 {
+                for tag in &spec.tags {
+                    let mut tag_stmt = self.conn.prepare(
+                        "SELECT DISTINCT ii.intent_id
+                         FROM intent_interfaces ii
+                         JOIN intents i ON i.id = ii.intent_id
+                         WHERE ii.agent_id != ?1
+                           AND i.computed_stability >= ?2
+                           AND ii.tags LIKE ?3",
+                    )?;
+                    let tag_pattern = format!("%{}%", tag);
+                    let rows = tag_stmt.query_map(
+                        params![exclude_agent, min_stability, tag_pattern],
+                        |row| row.get::<_, String>(0),
+                    )?;
+                    for row in rows {
+                        if let Ok(id) = row {
+                            candidate_ids.insert(id);
+                        }
+                    }
+                }
+            }
+        }
+
+        if candidate_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Phase 2: Load candidate intents and verify with full structural check.
+        let all_candidates = self.query_all(Some(min_stability))?;
+        let overlapping: Vec<IntentNode> = all_candidates
             .into_iter()
-            .filter(|intent| intent.agent_id != exclude_agent)
+            .filter(|intent| candidate_ids.contains(&intent.id))
             .filter(|intent| {
-                // Check if any of their provides/requires overlap with our specs
                 let their_specs: Vec<&InterfaceSpec> = intent
                     .provides
                     .iter()
