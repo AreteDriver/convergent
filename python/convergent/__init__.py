@@ -1,7 +1,14 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
+from convergent.constraints import (
+    ConstraintCheckResult,
+    ConstraintEngine,
+    ConstraintKind,
+    GateResult,
+    TypedConstraint,
+)
 from convergent.contract import (
     ConflictClass,
     ContractViolation,
@@ -17,6 +24,21 @@ from convergent.contract import (
     content_hash_intent,
     content_hash_intents,
     validate_publish,
+)
+from convergent.economics import (
+    Budget,
+    CoordinationCostReport,
+    CostModel,
+    EscalationAction,
+    EscalationDecision,
+    EscalationPolicy,
+)
+from convergent.governor import (
+    AgentBranch,
+    GovernorVerdict,
+    MergeGovernor,
+    ProposalResult,
+    VerdictKind,
 )
 from convergent.intent import (
     Constraint,
@@ -46,6 +68,25 @@ from convergent.semantic import (
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 
 __all__ = [
+    # Layer 1: Constraint Engine
+    "ConstraintCheckResult",
+    "ConstraintEngine",
+    "ConstraintKind",
+    "GateResult",
+    "TypedConstraint",
+    # Layer 3: Economics
+    "Budget",
+    "CoordinationCostReport",
+    "CostModel",
+    "EscalationAction",
+    "EscalationDecision",
+    "EscalationPolicy",
+    # Governor (integrates all 3 layers)
+    "AgentBranch",
+    "GovernorVerdict",
+    "MergeGovernor",
+    "ProposalResult",
+    "VerdictKind",
     # Contract
     "ConflictClass",
     "ContractViolation",
