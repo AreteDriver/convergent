@@ -115,12 +115,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
           restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Install dependencies
-        run: |
-          pip install maturin pytest pytest-asyncio
-
-      - name: Build Rust extension
-        run: maturin develop --release
+      - name: Build and install
+        run: pip install ".[dev]"
 
       - name: Run tests
         run: pytest tests/ -v
