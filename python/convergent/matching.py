@@ -86,10 +86,7 @@ def names_overlap(a: str, b: str) -> bool:
         return True
 
     # Containment match
-    if na in nb or nb in na:
-        return True
-
-    return False
+    return bool(na in nb or nb in na)
 
 
 def normalize_type(t: str) -> str:

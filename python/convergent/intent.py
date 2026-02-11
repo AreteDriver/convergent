@@ -91,8 +91,7 @@ class Constraint:
     def conflicts_with(self, other: Constraint) -> bool:
         """Check if two constraints conflict (normalized target comparison)."""
         return (
-            normalize_constraint_target(self.target)
-            == normalize_constraint_target(other.target)
+            normalize_constraint_target(self.target) == normalize_constraint_target(other.target)
             and self.requirement != other.requirement
         )
 
@@ -237,9 +236,7 @@ class ResolutionResult:
     @property
     def min_confidence(self) -> float:
         """Return the lowest confidence score across all adjustments and conflicts."""
-        scores = [a.confidence for a in self.adjustments] + [
-            c.confidence for c in self.conflicts
-        ]
+        scores = [a.confidence for a in self.adjustments] + [c.confidence for c in self.conflicts]
         return min(scores) if scores else 1.0
 
     def adjustments_above(self, threshold: float) -> list[Adjustment]:

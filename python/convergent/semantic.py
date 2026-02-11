@@ -72,9 +72,7 @@ class SemanticMatcher(Protocol):
         self, constraint: dict[str, Any], intent: dict[str, Any]
     ) -> ConstraintApplicability: ...
 
-    def predict_trajectory(
-        self, agent_history: list[dict[str, Any]]
-    ) -> TrajectoryPrediction: ...
+    def predict_trajectory(self, agent_history: list[dict[str, Any]]) -> TrajectoryPrediction: ...
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +131,7 @@ _OVERLAP_BATCH_TEMPLATE = (
     "overlap (refer to the same concept). Consider name synonyms, functional "
     "equivalence, and domain context.\n\n"
     "Pairs:\n{pairs_json}\n\n"
-    'Respond with a JSON array of objects, one per pair, each with:\n'
+    "Respond with a JSON array of objects, one per pair, each with:\n"
     '  "overlap": boolean,\n'
     '  "confidence": float 0.0-1.0,\n'
     '  "reasoning": string (brief explanation)\n'
@@ -186,11 +184,11 @@ class AnthropicSemanticMatcher:
     ) -> None:
         try:
             import anthropic  # noqa: F811
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "The 'anthropic' package is required for AnthropicSemanticMatcher. "
                 "Install it with: pip install anthropic"
-            )
+            ) from err
 
         self._client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
         self._haiku = haiku_model or "claude-haiku-4-5-20251001"
@@ -219,9 +217,7 @@ class AnthropicSemanticMatcher:
             text = "\n".join(lines)
         return json.loads(text)
 
-    def check_overlap(
-        self, spec_a: dict[str, Any], spec_b: dict[str, Any]
-    ) -> SemanticMatch:
+    def check_overlap(self, spec_a: dict[str, Any], spec_b: dict[str, Any]) -> SemanticMatch:
         """Check if two specs semantically overlap."""
         return self.check_overlap_batch([(spec_a, spec_b)])[0]
 
@@ -319,9 +315,7 @@ class AnthropicSemanticMatcher:
         self._cache.set(cache_key, result)
         return result
 
-    def predict_trajectory(
-        self, agent_history: list[dict[str, Any]]
-    ) -> TrajectoryPrediction:
+    def predict_trajectory(self, agent_history: list[dict[str, Any]]) -> TrajectoryPrediction:
         """Predict an agent's next moves from their intent history."""
         if not agent_history:
             return TrajectoryPrediction(agent_id="", confidence=0.0)
@@ -333,9 +327,7 @@ class AnthropicSemanticMatcher:
             return cached
 
         try:
-            prompt = _TRAJECTORY_TEMPLATE.format(
-                history_json=json.dumps(agent_history, indent=2)
-            )
+            prompt = _TRAJECTORY_TEMPLATE.format(history_json=json.dumps(agent_history, indent=2))
             response_text = self._call_llm(self._sonnet, _TRAJECTORY_SYSTEM, prompt)
             parsed = self._parse_json(response_text)
             result = TrajectoryPrediction(

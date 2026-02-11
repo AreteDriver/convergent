@@ -197,7 +197,8 @@ class IntentResolver:
         if self.semantic_matcher is not None:
             all_intents = self.backend.query_all(self.min_stability)
             non_overlapping = [
-                o for o in all_intents
+                o
+                for o in all_intents
                 if o.agent_id != intent.agent_id and o.id not in structurally_overlapping_ids
             ]
 
@@ -212,7 +213,7 @@ class IntentResolver:
 
             if pairs:
                 matches = self.semantic_matcher.check_overlap_batch(pairs)
-                for match, (my_prov, their_prov, other) in zip(matches, pair_context):
+                for match, (my_prov, their_prov, other) in zip(matches, pair_context, strict=True):
                     if match.overlap and match.confidence >= self.semantic_confidence_threshold:
                         other_stability = other.compute_stability()
                         if other_stability > my_stability:
@@ -365,8 +366,6 @@ class IntentResolver:
 
         Returns empty dict if no semantic_matcher is configured.
         """
-        from convergent.semantic import TrajectoryPrediction  # noqa: F811
-
         if self.semantic_matcher is None:
             return {}
 
@@ -382,9 +381,7 @@ class IntentResolver:
             history = agents.get(aid)
             if not history:
                 continue
-            prediction = self.semantic_matcher.predict_trajectory(
-                [i.to_dict() for i in history]
-            )
+            prediction = self.semantic_matcher.predict_trajectory([i.to_dict() for i in history])
             results[aid] = prediction
 
         return results

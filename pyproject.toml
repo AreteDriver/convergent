@@ -1,6 +1,6 @@
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
-build-backend = "maturin"
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "convergent"
@@ -37,11 +37,17 @@ dev = [
 llm = [
     "anthropic>=0.39.0",
 ]
+rust = [
+    "maturin>=1.0,<2.0",
+]
 
-[tool.maturin]
-features = ["pyo3/extension-module"]
-python-source = "python"
-module-name = "convergent._core"
+[project.urls]
+Homepage = "https://github.com/AreteDriver/convergent"
+Repository = "https://github.com/AreteDriver/convergent"
+Issues = "https://github.com/AreteDriver/convergent/issues"
+
+[tool.setuptools.packages.find]
+where = ["python"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
