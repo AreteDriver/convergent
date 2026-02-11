@@ -1,6 +1,6 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from convergent.constraints import (
     ConstraintCheckResult,
@@ -64,6 +64,17 @@ from convergent.semantic import (
     SemanticMatch,
     SemanticMatcher,
     TrajectoryPrediction,
+)
+from convergent.benchmark import BenchmarkMetrics, BenchmarkSuite, ScenarioType, run_benchmark, run_scaling_suite
+from convergent.gates import (
+    CommandGate,
+    CompileGate,
+    ConstraintGate,
+    GateReport,
+    GateRunResult,
+    GateRunner,
+    MypyGate,
+    PytestGate,
 )
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 
@@ -130,6 +141,21 @@ __all__ = [
     "normalize_type",
     "parse_signature",
     "signatures_compatible",
+    # Benchmark
+    "BenchmarkMetrics",
+    "BenchmarkSuite",
+    "ScenarioType",
+    "run_benchmark",
+    "run_scaling_suite",
+    # Gates (subprocess-backed evidence)
+    "CommandGate",
+    "CompileGate",
+    "ConstraintGate",
+    "GateReport",
+    "GateRunResult",
+    "GateRunner",
+    "MypyGate",
+    "PytestGate",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
