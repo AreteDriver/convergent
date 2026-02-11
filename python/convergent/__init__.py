@@ -1,7 +1,23 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
+from convergent.contract import (
+    ConflictClass,
+    ContractViolation,
+    DEFAULT_CONTRACT,
+    DEFAULT_RESOLUTION_POLICY,
+    DEFAULT_STABILITY_WEIGHTS,
+    EdgeType,
+    GraphInvariant,
+    IntentGraphContract,
+    MutationType,
+    ResolutionPolicy,
+    StabilityWeights,
+    content_hash_intent,
+    content_hash_intents,
+    validate_publish,
+)
 from convergent.intent import (
     Constraint,
     ConstraintSeverity,
@@ -19,6 +35,7 @@ from convergent.matching import (
     parse_signature,
     signatures_compatible,
 )
+from convergent.replay import ReplayLog, ReplayResult
 from convergent.resolver import IntentResolver
 from convergent.semantic import (
     ConstraintApplicability,
@@ -26,8 +43,25 @@ from convergent.semantic import (
     SemanticMatcher,
     TrajectoryPrediction,
 )
+from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 
 __all__ = [
+    # Contract
+    "ConflictClass",
+    "ContractViolation",
+    "DEFAULT_CONTRACT",
+    "DEFAULT_RESOLUTION_POLICY",
+    "DEFAULT_STABILITY_WEIGHTS",
+    "EdgeType",
+    "GraphInvariant",
+    "IntentGraphContract",
+    "MutationType",
+    "ResolutionPolicy",
+    "StabilityWeights",
+    "content_hash_intent",
+    "content_hash_intents",
+    "validate_publish",
+    # Core types
     "Constraint",
     "ConstraintApplicability",
     "ConstraintSeverity",
@@ -37,9 +71,18 @@ __all__ = [
     "IntentResolver",
     "InterfaceKind",
     "InterfaceSpec",
+    # Replay
+    "ReplayLog",
+    "ReplayResult",
+    # Semantic
     "SemanticMatch",
     "SemanticMatcher",
     "TrajectoryPrediction",
+    # Versioning
+    "GraphSnapshot",
+    "MergeResult",
+    "VersionedGraph",
+    # Matching utilities
     "names_overlap",
     "normalize_constraint_target",
     "normalize_name",
