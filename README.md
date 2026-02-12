@@ -87,14 +87,13 @@ The result: agents that started from the same codebase snapshot independently ar
 git clone https://github.com/AreteDriver/convergent.git
 cd convergent
 
-# Install (requires Rust toolchain + Python 3.10+)
+# Python-only (no Rust needed — uses pure-Python fallback)
+PYTHONPATH=python python -m convergent
+PYTHONPATH=python pytest tests/ -v
+
+# With Rust core (optional, for production performance)
 pip install maturin
 maturin develop --release
-
-# Run the convergence demo
-python -m convergent.demo
-
-# Run tests
 pytest tests/ -v
 cargo test
 ```
