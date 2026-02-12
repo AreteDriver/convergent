@@ -245,10 +245,8 @@ impl IntentGraph {
                 params![exclude_agent, min_stability, normalized, pattern],
                 |row| row.get::<_, String>(0),
             )?;
-            for row in rows {
-                if let Ok(id) = row {
-                    candidate_ids.insert(id);
-                }
+            for id in rows.flatten() {
+                candidate_ids.insert(id);
             }
 
             // Tag-based candidates: >=2 shared tags
@@ -263,14 +261,12 @@ impl IntentGraph {
                            AND ii.tags LIKE ?3",
                     )?;
                     let tag_pattern = format!("%{}%", tag);
-                    let rows = tag_stmt.query_map(
-                        params![exclude_agent, min_stability, tag_pattern],
-                        |row| row.get::<_, String>(0),
-                    )?;
-                    for row in rows {
-                        if let Ok(id) = row {
-                            candidate_ids.insert(id);
-                        }
+                    let rows = tag_stmt
+                        .query_map(params![exclude_agent, min_stability, tag_pattern], |row| {
+                            row.get::<_, String>(0)
+                        })?;
+                    for id in rows.flatten() {
+                        candidate_ids.insert(id);
                     }
                 }
             }
@@ -392,22 +388,21 @@ impl IntentGraph {
                 for their_provision in &other.provides {
                     if my_requirement.structurally_overlaps(their_provision)
                         && !my_requirement.signature_compatible(their_provision)
+                        && other_stability > self.scorer.compute(intent)
                     {
-                        if other_stability > self.scorer.compute(intent) {
-                            adjustments.push(Adjustment {
-                                kind: AdjustmentKind::AdaptSignature,
-                                description: format!(
-                                    "Adapt '{}' signature to match '{}' from agent {} — \
+                        adjustments.push(Adjustment {
+                            kind: AdjustmentKind::AdaptSignature,
+                            description: format!(
+                                "Adapt '{}' signature to match '{}' from agent {} — \
                                      expected '{}', they provide '{}'",
-                                    my_requirement.name,
-                                    their_provision.name,
-                                    other.agent_id,
-                                    my_requirement.signature,
-                                    their_provision.signature,
-                                ),
-                                source_intent_id: other.id.clone(),
-                            });
-                        }
+                                my_requirement.name,
+                                their_provision.name,
+                                other.agent_id,
+                                my_requirement.signature,
+                                their_provision.signature,
+                            ),
+                            source_intent_id: other.id.clone(),
+                        });
                     }
                 }
             }

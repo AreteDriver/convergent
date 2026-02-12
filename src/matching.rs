@@ -53,7 +53,7 @@ fn split_camel_case(s: &str) -> Vec<String> {
         let c = chars[i];
         if c.is_uppercase() && !current.is_empty() {
             let next_is_lower = i + 1 < chars.len() && chars[i + 1].is_lowercase();
-            let prev_is_lower = current.chars().last().map_or(false, |p| p.is_lowercase());
+            let prev_is_lower = current.chars().last().is_some_and(|p| p.is_lowercase());
             if prev_is_lower || next_is_lower {
                 tokens.push(current.clone());
                 current.clear();
@@ -112,7 +112,11 @@ pub fn normalize_type(t: &str) -> String {
 
     // Handle X | None or None | X
     if t.contains(" | ") {
-        let parts: Vec<&str> = t.split(" | ").map(|p| p.trim()).filter(|p| *p != "None").collect();
+        let parts: Vec<&str> = t
+            .split(" | ")
+            .map(|p| p.trim())
+            .filter(|p| *p != "None")
+            .collect();
         if let Some(first) = parts.first() {
             t = first.to_string();
         } else {
@@ -201,7 +205,7 @@ pub fn normalize_constraint_target(target: &str) -> String {
     let mut t = target.to_lowercase();
 
     // Replace underscores and hyphens with spaces
-    t = t.replace('_', " ").replace('-', " ");
+    t = t.replace(['_', '-'], " ");
 
     // Collapse whitespace
     t = t.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -335,7 +339,10 @@ mod tests {
 
     #[test]
     fn test_normalize_constraint_target_no_suffix() {
-        assert_eq!(normalize_constraint_target("authentication"), "authentication");
+        assert_eq!(
+            normalize_constraint_target("authentication"),
+            "authentication"
+        );
         assert_eq!(normalize_constraint_target("User.id"), "user.id");
     }
 
