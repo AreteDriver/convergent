@@ -11,7 +11,7 @@ use crate::models::*;
 use crate::stability::StabilityScorer;
 
 /// Python-facing wrapper for IntentGraph
-#[pyclass(name = "IntentGraph")]
+#[pyclass(name = "IntentGraph", unsendable)]
 struct PyIntentGraph {
     inner: IntentGraph,
 }
@@ -40,13 +40,13 @@ impl PyIntentGraph {
 
     /// Query all intents, optionally filtered by minimum stability.
     #[pyo3(signature = (min_stability=None))]
-    fn query_all(&self, py: Python, min_stability: Option<f64>) -> PyResult<PyObject> {
+    fn query_all(&self, py: Python, min_stability: Option<f64>) -> PyResult<Py<PyAny>> {
         let intents = self
             .inner
             .query_all(min_stability)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let list = PyList::empty_bound(py);
+        let list = PyList::empty(py);
         for intent in intents {
             list.append(intent_to_dict(py, &intent)?)?;
         }
@@ -54,13 +54,13 @@ impl PyIntentGraph {
     }
 
     /// Query intents from a specific agent.
-    fn query_by_agent(&self, py: Python, agent_id: &str) -> PyResult<PyObject> {
+    fn query_by_agent(&self, py: Python, agent_id: &str) -> PyResult<Py<PyAny>> {
         let intents = self
             .inner
             .query_by_agent(agent_id)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let list = PyList::empty_bound(py);
+        let list = PyList::empty(py);
         for intent in intents {
             list.append(intent_to_dict(py, &intent)?)?;
         }
@@ -74,14 +74,14 @@ impl PyIntentGraph {
         specs_list: &Bound<'_, PyList>,
         exclude_agent: &str,
         min_stability: f64,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         let specs = list_to_interface_specs(specs_list)?;
         let intents = self
             .inner
             .find_overlapping(&specs, exclude_agent, min_stability)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let list = PyList::empty_bound(py);
+        let list = PyList::empty(py);
         for intent in intents {
             list.append(intent_to_dict(py, &intent)?)?;
         }
@@ -94,21 +94,21 @@ impl PyIntentGraph {
         py: Python,
         intent_dict: &Bound<'_, PyDict>,
         min_stability: f64,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         let intent = dict_to_intent(intent_dict)?;
         let result = self
             .inner
             .resolve(&intent, min_stability)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("original_intent", &result.original_intent)?;
         dict.set_item("is_clean", result.is_clean())?;
         dict.set_item("has_adjustments", result.has_adjustments())?;
 
-        let adj_list = PyList::empty_bound(py);
+        let adj_list = PyList::empty(py);
         for adj in &result.adjustments {
-            let d = PyDict::new_bound(py);
+            let d = PyDict::new(py);
             d.set_item("kind", format!("{:?}", adj.kind))?;
             d.set_item("description", &adj.description)?;
             d.set_item("source_intent_id", &adj.source_intent_id)?;
@@ -116,9 +116,9 @@ impl PyIntentGraph {
         }
         dict.set_item("adjustments", adj_list)?;
 
-        let conflict_list = PyList::empty_bound(py);
+        let conflict_list = PyList::empty(py);
         for conflict in &result.conflicts {
-            let d = PyDict::new_bound(py);
+            let d = PyDict::new(py);
             d.set_item("my_intent_id", &conflict.my_intent_id)?;
             d.set_item("their_intent_id", &conflict.their_intent_id)?;
             d.set_item("description", &conflict.description)?;
@@ -128,9 +128,9 @@ impl PyIntentGraph {
         }
         dict.set_item("conflicts", conflict_list)?;
 
-        let constraint_list = PyList::empty_bound(py);
+        let constraint_list = PyList::empty(py);
         for c in &result.adopted_constraints {
-            let d = PyDict::new_bound(py);
+            let d = PyDict::new(py);
             d.set_item("target", &c.target)?;
             d.set_item("requirement", &c.requirement)?;
             constraint_list.append(d)?;
@@ -148,13 +148,13 @@ impl PyIntentGraph {
     }
 
     /// Get graph summary.
-    fn summary(&self, py: Python) -> PyResult<PyObject> {
+    fn summary(&self, py: Python) -> PyResult<Py<PyAny>> {
         let s = self
             .inner
             .summary()
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
 
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("total_intents", s.total_intents)?;
         dict.set_item("agent_count", s.agent_count)?;
         dict.set_item("agents", s.agents)?;
@@ -204,17 +204,17 @@ fn dict_to_intent(dict: &Bound<'_, PyDict>) -> PyResult<IntentNode> {
     }
 
     if let Some(provides) = dict.get_item("provides")? {
-        let list: &Bound<'_, PyList> = provides.downcast()?;
+        let list: &Bound<'_, PyList> = provides.cast()?;
         intent.provides = list_to_interface_specs(list)?;
     }
 
     if let Some(requires) = dict.get_item("requires")? {
-        let list: &Bound<'_, PyList> = requires.downcast()?;
+        let list: &Bound<'_, PyList> = requires.cast()?;
         intent.requires = list_to_interface_specs(list)?;
     }
 
     if let Some(constraints) = dict.get_item("constraints")? {
-        let list: &Bound<'_, PyList> = constraints.downcast()?;
+        let list: &Bound<'_, PyList> = constraints.cast()?;
         intent.constraints = list_to_constraints(list)?;
     }
 
@@ -223,7 +223,7 @@ fn dict_to_intent(dict: &Bound<'_, PyDict>) -> PyResult<IntentNode> {
     }
 
     if let Some(evidence) = dict.get_item("evidence")? {
-        let list: &Bound<'_, PyList> = evidence.downcast()?;
+        let list: &Bound<'_, PyList> = evidence.cast()?;
         intent.evidence = list_to_evidence(list)?;
     }
 
@@ -237,7 +237,7 @@ fn dict_to_intent(dict: &Bound<'_, PyDict>) -> PyResult<IntentNode> {
 fn list_to_interface_specs(list: &Bound<'_, PyList>) -> PyResult<Vec<InterfaceSpec>> {
     let mut specs = Vec::new();
     for item in list.iter() {
-        let dict: &Bound<'_, PyDict> = item.downcast()?;
+        let dict: &Bound<'_, PyDict> = item.cast()?;
         let name: String = dict
             .get_item("name")?
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("name"))?
@@ -286,7 +286,7 @@ fn list_to_interface_specs(list: &Bound<'_, PyList>) -> PyResult<Vec<InterfaceSp
 fn list_to_constraints(list: &Bound<'_, PyList>) -> PyResult<Vec<Constraint>> {
     let mut constraints = Vec::new();
     for item in list.iter() {
-        let dict: &Bound<'_, PyDict> = item.downcast()?;
+        let dict: &Bound<'_, PyDict> = item.cast()?;
         let target: String = dict
             .get_item("target")?
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("target"))?
@@ -312,7 +312,7 @@ fn list_to_constraints(list: &Bound<'_, PyList>) -> PyResult<Vec<Constraint>> {
 fn list_to_evidence(list: &Bound<'_, PyList>) -> PyResult<Vec<Evidence>> {
     let mut evidence = Vec::new();
     for item in list.iter() {
-        let dict: &Bound<'_, PyDict> = item.downcast()?;
+        let dict: &Bound<'_, PyDict> = item.cast()?;
         let kind_str: String = dict
             .get_item("kind")?
             .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyKeyError, _>("kind"))?
@@ -342,7 +342,7 @@ fn list_to_evidence(list: &Bound<'_, PyList>) -> PyResult<Vec<Evidence>> {
 }
 
 fn intent_to_dict<'py>(py: Python<'py>, intent: &IntentNode) -> PyResult<Bound<'py, PyDict>> {
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
     dict.set_item("id", &intent.id)?;
     dict.set_item("agent_id", &intent.agent_id)?;
     dict.set_item("timestamp", intent.timestamp.to_rfc3339())?;
@@ -351,9 +351,9 @@ fn intent_to_dict<'py>(py: Python<'py>, intent: &IntentNode) -> PyResult<Bound<'
     dict.set_item("parent_id", &intent.parent_id)?;
 
     // Serialize provides
-    let provides = PyList::empty_bound(py);
+    let provides = PyList::empty(py);
     for spec in &intent.provides {
-        let d = PyDict::new_bound(py);
+        let d = PyDict::new(py);
         d.set_item("name", &spec.name)?;
         d.set_item("kind", format!("{:?}", spec.kind))?;
         d.set_item("signature", &spec.signature)?;
@@ -364,9 +364,9 @@ fn intent_to_dict<'py>(py: Python<'py>, intent: &IntentNode) -> PyResult<Bound<'
     dict.set_item("provides", provides)?;
 
     // Serialize requires
-    let requires = PyList::empty_bound(py);
+    let requires = PyList::empty(py);
     for spec in &intent.requires {
-        let d = PyDict::new_bound(py);
+        let d = PyDict::new(py);
         d.set_item("name", &spec.name)?;
         d.set_item("kind", format!("{:?}", spec.kind))?;
         d.set_item("signature", &spec.signature)?;
@@ -377,9 +377,9 @@ fn intent_to_dict<'py>(py: Python<'py>, intent: &IntentNode) -> PyResult<Bound<'
     dict.set_item("requires", requires)?;
 
     // Serialize constraints
-    let constraints = PyList::empty_bound(py);
+    let constraints = PyList::empty(py);
     for c in &intent.constraints {
-        let d = PyDict::new_bound(py);
+        let d = PyDict::new(py);
         d.set_item("target", &c.target)?;
         d.set_item("requirement", &c.requirement)?;
         d.set_item("affects_tags", &c.affects_tags)?;
