@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-12
+
+### Added
+- **SQLite backend** (`sqlite_backend.py`): Persistent intent graph using stdlib `sqlite3` with WAL mode, denormalized `intent_interfaces` table for efficient overlap queries, and full serialization round-trips
+- **Graph visualization** (`visualization.py`): Four output formats — `text_table`, `dot_graph` (graphviz DOT), `html_report` (self-contained), `overlap_matrix` (text matrix)
+- **Event callbacks**: Hook system on `IntentResolver` — `add_hook`/`remove_hook` for `"publish"`, `"resolve"`, and `"conflict"` events with exception-safe firing
+- **Delegation checker factory**: `create_delegation_checker()` convenience function for Gorgon integration
+- `GraphBackend` and `PythonGraphBackend` now exported from package
+- `VersionedGraph` accepts `backend_factory` kwarg for custom backend construction
+
+### Changed
+- Gorgon `convergence.py`: Added `create_checker()` factory and `format_convergence_alert()` formatter
+- Gorgon `supervisor.py`: Enhanced conflict handling with formatted alerts and dropped agent count logging
+- Gorgon API and TUI: Wired `convergence_checker=create_checker()` with graceful degradation
+
+### Tests
+- 403 Python tests + 36 Rust tests (81 new: 40 SQLite, 18 hooks, 20 visualization, 3 factory)
+
 ## [0.2.0] - 2026-02-12
 
 ### Added
@@ -52,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Rust acceleration via `maturin develop --release`
 - GitHub Actions CI for Rust + Python matrix (3.10/3.11/3.12)
 
-[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/AreteDriver/convergent/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AreteDriver/convergent/releases/tag/v0.2.0
 [0.1.0]: https://github.com/AreteDriver/convergent/commit/73e2b29

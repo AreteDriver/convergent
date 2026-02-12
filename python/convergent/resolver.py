@@ -100,6 +100,8 @@ class IntentResolver:
     SemanticMatcher is provided.
     """
 
+    _VALID_EVENTS = frozenset({"publish", "resolve", "conflict"})
+
     def __init__(
         self,
         backend: GraphBackend | None = None,
@@ -111,10 +113,46 @@ class IntentResolver:
         self.min_stability = min_stability
         self.semantic_matcher = semantic_matcher
         self.semantic_confidence_threshold = semantic_confidence_threshold
+        self._hooks: dict[str, list] = {e: [] for e in self._VALID_EVENTS}
+
+    def add_hook(self, event: str, callback) -> None:
+        """Register a callback for an event.
+
+        Events:
+            "publish"  — callback(intent: Intent, stability: float)
+            "resolve"  — callback(intent: Intent, result: ResolutionResult)
+            "conflict" — callback(intent: Intent, conflict: ConflictReport)
+
+        Raises:
+            ValueError: If event name is not recognized.
+        """
+        if event not in self._VALID_EVENTS:
+            raise ValueError(f"Unknown event '{event}'. Valid events: {sorted(self._VALID_EVENTS)}")
+        self._hooks[event].append(callback)
+
+    def remove_hook(self, event: str, callback) -> None:
+        """Remove a previously registered callback.
+
+        Raises:
+            ValueError: If event name is not recognized.
+        """
+        if event not in self._VALID_EVENTS:
+            raise ValueError(f"Unknown event '{event}'. Valid events: {sorted(self._VALID_EVENTS)}")
+        self._hooks[event] = [cb for cb in self._hooks[event] if cb is not callback]
+
+    def _fire_hooks(self, event: str, *args) -> None:
+        """Fire all callbacks for an event. Exceptions are logged and swallowed."""
+        for callback in self._hooks[event]:
+            try:
+                callback(*args)
+            except Exception:
+                logger.exception("Hook %r raised an exception", event)
 
     def publish(self, intent: Intent) -> float:
         """Publish an intent to the shared graph. Returns computed stability."""
-        return self.backend.publish(intent)
+        stability = self.backend.publish(intent)
+        self._fire_hooks("publish", intent, stability)
+        return stability
 
     def resolve(self, intent: Intent) -> ResolutionResult:
         """Resolve an intent against the current graph state.
@@ -356,6 +394,10 @@ class IntentResolver:
             f"Resolved intent '{intent.intent}' from {intent.agent_id}: "
             f"{len(adjustments)} adjustments, {len(conflicts)} conflicts"
         )
+
+        self._fire_hooks("resolve", intent, resolution)
+        for conflict in conflicts:
+            self._fire_hooks("conflict", intent, conflict)
 
         return resolution
 

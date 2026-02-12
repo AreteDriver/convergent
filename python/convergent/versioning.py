@@ -138,12 +138,15 @@ class VersionedGraph:
         branch_name: str = "main",
         resolver: IntentResolver | None = None,
         policy: ResolutionPolicy | None = None,
+        backend_factory: type | None = None,
     ) -> None:
         self.branch_name = branch_name
-        self.resolver = resolver or IntentResolver(
-            backend=PythonGraphBackend(),
-            min_stability=0.0,
-        )
+        self._backend_factory = backend_factory
+        if resolver is not None:
+            self.resolver = resolver
+        else:
+            backend = backend_factory() if backend_factory else PythonGraphBackend()
+            self.resolver = IntentResolver(backend=backend, min_stability=0.0)
         self.policy = policy or ResolutionPolicy()
         self._version = 0
         self._snapshots: list[GraphSnapshot] = []

@@ -1,6 +1,6 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from convergent.benchmark import (
     BenchmarkMetrics,
@@ -75,14 +75,16 @@ from convergent.matching import (
     signatures_compatible,
 )
 from convergent.replay import ReplayLog, ReplayResult
-from convergent.resolver import IntentResolver
+from convergent.resolver import GraphBackend, IntentResolver, PythonGraphBackend
 from convergent.semantic import (
     ConstraintApplicability,
     SemanticMatch,
     SemanticMatcher,
     TrajectoryPrediction,
 )
+from convergent.sqlite_backend import SQLiteBackend
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
+from convergent.visualization import dot_graph, html_report, overlap_matrix, text_table
 
 __all__ = [
     # Layer 1: Constraint Engine
@@ -129,6 +131,10 @@ __all__ = [
     "IntentResolver",
     "InterfaceKind",
     "InterfaceSpec",
+    # Backends
+    "GraphBackend",
+    "PythonGraphBackend",
+    "SQLiteBackend",
     # Replay
     "ReplayLog",
     "ReplayResult",
@@ -162,6 +168,13 @@ __all__ = [
     "GateRunner",
     "MypyGate",
     "PytestGate",
+    # Visualization
+    "dot_graph",
+    "html_report",
+    "overlap_matrix",
+    "text_table",
+    # Factories
+    "create_delegation_checker",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
@@ -171,3 +184,25 @@ try:
     __all__.append("AnthropicSemanticMatcher")
 except ImportError:
     pass
+
+
+def create_delegation_checker(
+    min_stability: float = 0.0,
+    backend: GraphBackend | None = None,
+) -> IntentResolver:
+    """Create an IntentResolver configured for delegation coherence checking.
+
+    Convenience factory for Gorgon integration. Uses a PythonGraphBackend
+    by default (in-memory, no persistence needed for delegation checks).
+
+    Args:
+        min_stability: Minimum stability threshold for overlap detection.
+        backend: Optional custom backend (e.g., SQLiteBackend for persistence).
+
+    Returns:
+        Configured IntentResolver ready for delegation checking.
+    """
+    return IntentResolver(
+        backend=backend or PythonGraphBackend(),
+        min_stability=min_stability,
+    )
