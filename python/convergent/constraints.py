@@ -31,12 +31,9 @@ from convergent.intent import (
     Constraint,
     ConstraintSeverity,
     Evidence,
-    EvidenceKind,
     Intent,
-    InterfaceSpec,
 )
 from convergent.matching import normalize_type, parse_signature
-
 
 # ---------------------------------------------------------------------------
 # Constraint kinds
@@ -207,21 +204,15 @@ class ConstraintEngine:
 
         # --- TYPE_CHECK / SCHEMA_RULE: Validate required fields ---
         if constraint.required_fields:
-            violations.extend(
-                _check_required_fields(constraint, intent)
-            )
+            violations.extend(_check_required_fields(constraint, intent))
 
         # --- SECURITY_POLICY / INVARIANT: Check forbidden patterns ---
         if constraint.forbidden_patterns:
-            violations.extend(
-                _check_forbidden_patterns(constraint, intent)
-            )
+            violations.extend(_check_forbidden_patterns(constraint, intent))
 
         # --- TEST_GATE: Check required evidence ---
         if constraint.required_evidence:
-            violations.extend(
-                _check_required_evidence(constraint, intent)
-            )
+            violations.extend(_check_required_evidence(constraint, intent))
 
         # --- Minimum stability ---
         if constraint.min_stability > 0:
@@ -264,15 +255,12 @@ class ConstraintEngine:
             result = self.check(constraint, intent)
             results.append(result)
 
-            if not result.satisfied:
-                if constraint.severity in (
-                    ConstraintSeverity.REQUIRED,
-                    ConstraintSeverity.CRITICAL,
-                ):
-                    for v in result.violations:
-                        blocking.append(
-                            f"[{constraint.severity.value}] {constraint.target}: {v}"
-                        )
+            if not result.satisfied and constraint.severity in (
+                ConstraintSeverity.REQUIRED,
+                ConstraintSeverity.CRITICAL,
+            ):
+                for v in result.violations:
+                    blocking.append(f"[{constraint.severity.value}] {constraint.target}: {v}")
 
         passed = len(blocking) == 0
 
@@ -289,9 +277,7 @@ class ConstraintEngine:
 # ---------------------------------------------------------------------------
 
 
-def _check_required_fields(
-    constraint: TypedConstraint, intent: Intent
-) -> list[str]:
+def _check_required_fields(constraint: TypedConstraint, intent: Intent) -> list[str]:
     """Check that intent's signatures contain required fields with correct types."""
     violations: list[str] = []
 
@@ -303,21 +289,16 @@ def _check_required_fields(
 
     for req_field, req_type in constraint.required_fields.items():
         if req_field not in all_fields:
-            violations.append(
-                f"Missing required field '{req_field}: {req_type}'"
-            )
+            violations.append(f"Missing required field '{req_field}: {req_type}'")
         elif normalize_type(all_fields[req_field]) != normalize_type(req_type):
             violations.append(
-                f"Field '{req_field}' has type '{all_fields[req_field]}', "
-                f"expected '{req_type}'"
+                f"Field '{req_field}' has type '{all_fields[req_field]}', expected '{req_type}'"
             )
 
     return violations
 
 
-def _check_forbidden_patterns(
-    constraint: TypedConstraint, intent: Intent
-) -> list[str]:
+def _check_forbidden_patterns(constraint: TypedConstraint, intent: Intent) -> list[str]:
     """Check that no forbidden patterns appear in intent signatures or names."""
     violations: list[str] = []
 
@@ -332,25 +313,19 @@ def _check_forbidden_patterns(
         compiled = re.compile(pattern, re.IGNORECASE)
         for text in texts_to_check:
             if compiled.search(text):
-                violations.append(
-                    f"Forbidden pattern '{pattern}' found in '{text}'"
-                )
+                violations.append(f"Forbidden pattern '{pattern}' found in '{text}'")
                 break  # One match per pattern is enough
 
     return violations
 
 
-def _check_required_evidence(
-    constraint: TypedConstraint, intent: Intent
-) -> list[str]:
+def _check_required_evidence(constraint: TypedConstraint, intent: Intent) -> list[str]:
     """Check that intent has required evidence kinds."""
     violations: list[str] = []
 
     present_kinds = {e.kind.value for e in intent.evidence}
     for required in constraint.required_evidence:
         if required not in present_kinds:
-            violations.append(
-                f"Missing required evidence: {required}"
-            )
+            violations.append(f"Missing required evidence: {required}")
 
     return violations

@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
-
 from convergent.benchmark import (
     BenchmarkMetrics,
     BenchmarkSuite,
@@ -21,15 +21,13 @@ from convergent.benchmark import (
     run_benchmark,
     run_scaling_suite,
 )
-from convergent.codegen_demo import DemoResult, run_baseline, run_convergent, run_demo
+from convergent.codegen_demo import run_baseline, run_convergent, run_demo
 from convergent.gates import (
     CommandGate,
     CompileGate,
-    ConstraintGate,
     GateReport,
-    GateRunResult,
     GateRunner,
-    MypyGate,
+    GateRunResult,
     PytestGate,
 )
 from convergent.intent import (
@@ -40,6 +38,7 @@ from convergent.intent import (
     InterfaceSpec,
 )
 
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 
 # ===================================================================
 # Benchmark tests
@@ -55,8 +54,10 @@ class TestBenchmarkMetrics:
 
     def test_conflict_rate_with_data(self) -> None:
         m = BenchmarkMetrics(
-            scenario="test", agent_count=5,
-            total_conflicts=3, total_resolutions=10,
+            scenario="test",
+            agent_count=5,
+            total_conflicts=3,
+            total_resolutions=10,
         )
         assert m.conflict_rate == pytest.approx(0.3)
 
@@ -66,30 +67,37 @@ class TestBenchmarkMetrics:
 
     def test_rework_rate_with_data(self) -> None:
         m = BenchmarkMetrics(
-            scenario="test", agent_count=5,
-            consume_instead_count=4, total_intents=20,
+            scenario="test",
+            agent_count=5,
+            consume_instead_count=4,
+            total_intents=20,
         )
         assert m.rework_rate == pytest.approx(0.2)
 
     def test_adjustments_per_agent(self) -> None:
         m = BenchmarkMetrics(
-            scenario="test", agent_count=5,
+            scenario="test",
+            agent_count=5,
             total_adjustments=15,
         )
         assert m.adjustments_per_agent == pytest.approx(3.0)
 
     def test_cost_per_agent(self) -> None:
         m = BenchmarkMetrics(
-            scenario="test", agent_count=4,
+            scenario="test",
+            agent_count=4,
             total_cost=100.0,
         )
         assert m.cost_per_agent == pytest.approx(25.0)
 
     def test_summary_line_format(self) -> None:
         m = BenchmarkMetrics(
-            scenario="independent", agent_count=10,
-            total_conflicts=0, total_resolutions=20,
-            convergence_rounds=2, all_converged=True,
+            scenario="independent",
+            agent_count=10,
+            total_conflicts=0,
+            total_resolutions=20,
+            convergence_rounds=2,
+            all_converged=True,
             wall_clock_seconds=0.5,
         )
         line = m.summary_line()
@@ -102,24 +110,30 @@ class TestBenchmarkSuiteOutput:
     """Test BenchmarkSuite summary output."""
 
     def test_summary_contains_header(self) -> None:
-        suite = BenchmarkSuite(results=[
-            BenchmarkMetrics(scenario="test", agent_count=2),
-            BenchmarkMetrics(scenario="test", agent_count=5),
-        ])
+        suite = BenchmarkSuite(
+            results=[
+                BenchmarkMetrics(scenario="test", agent_count=2),
+                BenchmarkMetrics(scenario="test", agent_count=5),
+            ]
+        )
         summary = suite.summary()
         assert "CONVERGENT BENCHMARK RESULTS" in summary
 
     def test_summary_includes_scaling_analysis(self) -> None:
-        suite = BenchmarkSuite(results=[
-            BenchmarkMetrics(
-                scenario="independent", agent_count=2,
-                convergence_rounds=2,
-            ),
-            BenchmarkMetrics(
-                scenario="independent", agent_count=10,
-                convergence_rounds=2,
-            ),
-        ])
+        suite = BenchmarkSuite(
+            results=[
+                BenchmarkMetrics(
+                    scenario="independent",
+                    agent_count=2,
+                    convergence_rounds=2,
+                ),
+                BenchmarkMetrics(
+                    scenario="independent",
+                    agent_count=10,
+                    convergence_rounds=2,
+                ),
+            ]
+        )
         summary = suite.summary()
         assert "SCALING ANALYSIS" in summary
         assert "SUBLINEAR" in summary
@@ -244,25 +258,31 @@ class TestGateReport:
     """Test GateReport aggregate."""
 
     def test_all_passed(self) -> None:
-        report = GateReport(results=[
-            GateRunResult(gate_name="a", passed=True),
-            GateRunResult(gate_name="b", passed=True),
-        ])
+        report = GateReport(
+            results=[
+                GateRunResult(gate_name="a", passed=True),
+                GateRunResult(gate_name="b", passed=True),
+            ]
+        )
         assert report.all_passed
         assert report.passed_count == 2
         assert report.failed_count == 0
 
     def test_some_failed(self) -> None:
-        report = GateReport(results=[
-            GateRunResult(
-                gate_name="a", passed=True,
-                evidence=[Evidence.test_pass("a passed")],
-            ),
-            GateRunResult(
-                gate_name="b", passed=False,
-                evidence=[Evidence(kind=EvidenceKind.TEST_FAIL, description="b failed")],
-            ),
-        ])
+        report = GateReport(
+            results=[
+                GateRunResult(
+                    gate_name="a",
+                    passed=True,
+                    evidence=[Evidence.test_pass("a passed")],
+                ),
+                GateRunResult(
+                    gate_name="b",
+                    passed=False,
+                    evidence=[Evidence(kind=EvidenceKind.TEST_FAIL, description="b failed")],
+                ),
+            ]
+        )
         assert not report.all_passed
         assert report.passed_count == 1
         assert report.failed_count == 1
@@ -357,8 +377,11 @@ class TestPytestGate:
     def test_passing_test_file(self) -> None:
         """Run PytestGate against a trivially passing test."""
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", prefix="test_pass_",
-            dir="/tmp", delete=False,
+            mode="w",
+            suffix=".py",
+            prefix="test_pass_",
+            dir="/tmp",
+            delete=False,
         ) as f:
             f.write("def test_ok(): assert True\n")
             f.flush()
@@ -378,8 +401,11 @@ class TestPytestGate:
     def test_failing_test_file(self) -> None:
         """Run PytestGate against a failing test."""
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", prefix="test_fail_",
-            dir="/tmp", delete=False,
+            mode="w",
+            suffix=".py",
+            prefix="test_fail_",
+            dir="/tmp",
+            delete=False,
         ) as f:
             f.write("def test_bad(): assert False\n")
             f.flush()
@@ -400,7 +426,7 @@ class TestPytestGate:
         """Run PytestGate against the actual convergent test suite."""
         gate = PytestGate(
             test_path="tests/test_convergence.py",
-            cwd="/home/user/convergent",
+            cwd=PROJECT_ROOT,
             timeout=60,
             extra_args=["-q", "--no-header"],
         )
@@ -474,10 +500,14 @@ class TestGatesIntegration:
         intent = Intent(
             agent_id="test",
             intent="test module",
-            provides=[InterfaceSpec(
-                name="TestSvc", kind=InterfaceKind.CLASS,
-                signature="run() -> bool", tags=["test"],
-            )],
+            provides=[
+                InterfaceSpec(
+                    name="TestSvc",
+                    kind=InterfaceKind.CLASS,
+                    signature="run() -> bool",
+                    tags=["test"],
+                )
+            ],
         )
         stability_before = intent.compute_stability()
 
@@ -495,10 +525,14 @@ class TestGatesIntegration:
         intent = Intent(
             agent_id="test",
             intent="test module",
-            provides=[InterfaceSpec(
-                name="TestSvc", kind=InterfaceKind.CLASS,
-                signature="run() -> bool", tags=["test"],
-            )],
+            provides=[
+                InterfaceSpec(
+                    name="TestSvc",
+                    kind=InterfaceKind.CLASS,
+                    signature="run() -> bool",
+                    tags=["test"],
+                )
+            ],
             evidence=[
                 Evidence.test_pass("initial_test"),
                 Evidence.code_committed("module.py"),

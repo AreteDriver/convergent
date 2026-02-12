@@ -23,7 +23,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-
 # ---------------------------------------------------------------------------
 # Cost model
 # ---------------------------------------------------------------------------
@@ -92,15 +91,17 @@ class Budget:
         self.tokens_used += tokens
         return True
 
-    def record_resolve(self, cost: float) -> None:
-        """Record a resolution operation."""
-        self.charge(cost)
+    def record_resolve(self, cost: float) -> bool:
+        """Record a resolution operation. Returns False if over budget."""
+        charged = self.charge(cost)
         self.resolves_performed += 1
+        return charged
 
-    def record_escalation(self, cost: float) -> None:
-        """Record an escalation operation."""
-        self.charge(cost)
+    def record_escalation(self, cost: float) -> bool:
+        """Record an escalation operation. Returns False if over budget."""
+        charged = self.charge(cost)
         self.escalations_performed += 1
+        return charged
 
     @property
     def utilization(self) -> float:
@@ -281,6 +282,7 @@ class CoordinationCostReport:
     total_resolves: int = 0
     total_escalations: int = 0
     total_auto_resolved: int = 0
+    total_blocked: int = 0
     total_deferred: int = 0
     total_cost: float = 0.0
     total_rework_avoided: float = 0.0
@@ -320,6 +322,8 @@ class CoordinationCostReport:
         elif decision.action == EscalationAction.ESCALATE_TO_HUMAN:
             self.total_escalations += 1
             self.total_cost += decision.expected_cost_escalate
+        elif decision.action == EscalationAction.BLOCK:
+            self.total_blocked += 1
         elif decision.action == EscalationAction.DEFER:
             self.total_deferred += 1
         # Track rework avoided when escalating instead of auto-resolving

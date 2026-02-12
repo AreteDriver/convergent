@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
 from convergent.agent import SimulationRunner
 from convergent.demo import build_agent_a, build_agent_b, build_agent_c
 from convergent.intent import (
@@ -35,7 +34,6 @@ from convergent.semantic import (
     _SemanticCache,
 )
 
-
 # ---------------------------------------------------------------------------
 # Mock implementation
 # ---------------------------------------------------------------------------
@@ -53,9 +51,7 @@ class MockSemanticMatcher:
         self.constraint_call_count = 0
         self.trajectory_call_count = 0
 
-    def check_overlap(
-        self, spec_a: dict[str, Any], spec_b: dict[str, Any]
-    ) -> SemanticMatch:
+    def check_overlap(self, spec_a: dict[str, Any], spec_b: dict[str, Any]) -> SemanticMatch:
         self.overlap_call_count += 1
         key = (spec_a.get("name", ""), spec_b.get("name", ""))
         return self.overlap_results.get(
@@ -72,9 +68,7 @@ class MockSemanticMatcher:
             results.append(
                 self.overlap_results.get(
                     key,
-                    SemanticMatch(
-                        overlap=False, confidence=0.0, reasoning="no match configured"
-                    ),
+                    SemanticMatch(overlap=False, confidence=0.0, reasoning="no match configured"),
                 )
             )
         return results
@@ -89,9 +83,7 @@ class MockSemanticMatcher:
             ConstraintApplicability(applies=False, confidence=0.0, reasoning="no match"),
         )
 
-    def predict_trajectory(
-        self, agent_history: list[dict[str, Any]]
-    ) -> TrajectoryPrediction:
+    def predict_trajectory(self, agent_history: list[dict[str, Any]]) -> TrajectoryPrediction:
         self.trajectory_call_count += 1
         if self.trajectory_result is not None:
             return self.trajectory_result
@@ -183,7 +175,7 @@ class TestSemanticOverlapDetection:
             ],
         )
 
-        result = resolver.resolve(intent_b)
+        resolver.resolve(intent_b)
         # Structural overlap found → no LLM batch call needed (no non-overlapping intents)
         assert matcher.overlap_batch_call_count == 0
 

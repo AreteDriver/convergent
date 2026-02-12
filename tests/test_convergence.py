@@ -22,8 +22,6 @@ from convergent.matching import (
     names_overlap,
     normalize_constraint_target,
     normalize_name,
-    normalize_type,
-    parse_signature,
     signatures_compatible,
 )
 from convergent.resolver import IntentResolver
@@ -621,9 +619,7 @@ class TestSemanticMatching:
         assert signatures_compatible("id: UUID, email: str", "id: UUID, email: str")
 
     def test_signatures_compatible_superset(self):
-        assert signatures_compatible(
-            "id: UUID, email: str", "id: UUID, email: str, name: str"
-        )
+        assert signatures_compatible("id: UUID, email: str", "id: UUID, email: str, name: str")
 
     def test_signatures_compatible_type_aliases(self):
         assert signatures_compatible("id: UUID, name: String", "id: uuid, name: str")

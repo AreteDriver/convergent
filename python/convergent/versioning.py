@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 
 from convergent.contract import (
     ConflictClass,
-    ContractViolation,
     ResolutionPolicy,
     content_hash_intents,
     validate_publish,
@@ -31,7 +30,6 @@ from convergent.intent import (
     ResolutionResult,
 )
 from convergent.resolver import IntentResolver, PythonGraphBackend
-
 
 # ---------------------------------------------------------------------------
 # Graph snapshot
@@ -156,9 +154,7 @@ class VersionedGraph:
         Raises ContractViolation if the publish would violate invariants.
         Returns computed stability.
         """
-        existing_ids = {
-            i.id for i in self.resolver.backend.query_all(min_stability=0.0)
-        }
+        existing_ids = {i.id for i in self.resolver.backend.query_all(min_stability=0.0)}
         violations = validate_publish(intent, existing_ids)
         if violations:
             raise violations[0]
@@ -227,9 +223,7 @@ class VersionedGraph:
         Returns:
             MergeResult with details of what was merged and any conflicts.
         """
-        my_ids = {
-            i.id for i in self.resolver.backend.query_all(min_stability=0.0)
-        }
+        my_ids = {i.id for i in self.resolver.backend.query_all(min_stability=0.0)}
         their_intents = other.resolver.backend.query_all(min_stability=0.0)
 
         # Find new intents (in other but not in self)
@@ -258,18 +252,17 @@ class VersionedGraph:
                     )
 
                     if conflict_class == ConflictClass.HARD_FAIL:
-                        result.hard_failures.append(
-                            (intent, conflict.description)
-                        )
+                        result.hard_failures.append((intent, conflict.description))
                         result.success = False
                     elif conflict_class == ConflictClass.HUMAN_ESCALATION:
-                        result.escalations.append(
-                            (intent, conflict.description)
-                        )
+                        result.escalations.append((intent, conflict.description))
                         result.success = False
 
-            # If no hard failures for this intent, merge it
-            if not any(i is intent for i, _ in result.hard_failures):
+            # Only merge if no hard failures or escalations for this intent
+            blocked = any(i is intent for i, _ in result.hard_failures) or any(
+                i is intent for i, _ in result.escalations
+            )
+            if not blocked:
                 self.resolver.publish(intent)
                 result.merged_intents.append(intent)
 

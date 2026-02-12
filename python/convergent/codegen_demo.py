@@ -37,9 +37,7 @@ from __future__ import annotations
 import textwrap
 from dataclasses import dataclass, field
 
-from convergent.agent import AgentAction, SimulatedAgent, SimulationRunner
 from convergent.constraints import ConstraintEngine, ConstraintKind, TypedConstraint
-from convergent.economics import Budget, CostModel
 from convergent.governor import AgentBranch, MergeGovernor
 from convergent.intent import (
     Constraint,
@@ -51,7 +49,6 @@ from convergent.intent import (
 )
 from convergent.resolver import IntentResolver
 from convergent.versioning import VersionedGraph
-
 
 # ---------------------------------------------------------------------------
 # Demo result
@@ -84,22 +81,23 @@ class DemoResult:
             "",
             f"{'Metric':<30s} {'Convergent':>12s} {'Baseline':>12s}",
             "-" * 72,
-            f"{'Rework cycles':<30s} {self.convergent_rework_cycles:>12d} {self.baseline_rework_cycles:>12d}",
-            f"{'Conflicts detected':<30s} {self.convergent_conflicts:>12d} {self.baseline_conflicts:>12d}",
-            f"{'Rounds to converge':<30s} {self.convergent_rounds:>12d} {self.baseline_rounds:>12d}",
-            f"{'Total adjustments':<30s} {self.convergent_adjustments:>12d} {self.baseline_adjustments:>12d}",
-            f"{'Merged cleanly':<30s} {'YES':>12s} {'NO' if not self.baseline_merged else 'YES':>12s}",
+            f"{'Rework cycles':<30s} {self.convergent_rework_cycles:>12d}"
+            f" {self.baseline_rework_cycles:>12d}",
+            f"{'Conflicts detected':<30s} {self.convergent_conflicts:>12d}"
+            f" {self.baseline_conflicts:>12d}",
+            f"{'Rounds to converge':<30s} {self.convergent_rounds:>12d}"
+            f" {self.baseline_rounds:>12d}",
+            f"{'Total adjustments':<30s} {self.convergent_adjustments:>12d}"
+            f" {self.baseline_adjustments:>12d}",
+            f"{'Merged cleanly':<30s} {'YES':>12s}"
+            f" {'NO' if not self.baseline_merged else 'YES':>12s}",
             "",
         ]
 
         if self.convergent_rework_cycles == 0 and self.baseline_rework_cycles > 0:
             savings = self.baseline_rework_cycles
-            lines.append(
-                f"RESULT: Convergent eliminated {savings} rework cycle(s)."
-            )
-            lines.append(
-                "Agents independently converged on compatible interfaces."
-            )
+            lines.append(f"RESULT: Convergent eliminated {savings} rework cycle(s).")
+            lines.append("Agents independently converged on compatible interfaces.")
         lines.append("=" * 72)
 
         if self.agent_code:
@@ -269,22 +267,26 @@ def run_convergent() -> tuple[int, int, int, int, bool, dict[str, str]]:
     """
     # Set up constraint engine with User model contract
     engine = ConstraintEngine()
-    engine.register(TypedConstraint(
-        kind=ConstraintKind.SCHEMA_RULE,
-        target="User model",
-        requirement="must have id: UUID, email: str",
-        severity=ConstraintSeverity.REQUIRED,
-        affects_tags=["user", "model"],
-        required_fields={"id": "UUID", "email": "str"},
-    ))
-    engine.register(TypedConstraint(
-        kind=ConstraintKind.TEST_GATE,
-        target="all modules",
-        requirement="must have test evidence",
-        severity=ConstraintSeverity.REQUIRED,
-        affects_tags=["auth", "api", "storage"],
-        required_evidence=["test_pass"],
-    ))
+    engine.register(
+        TypedConstraint(
+            kind=ConstraintKind.SCHEMA_RULE,
+            target="User model",
+            requirement="must have id: UUID, email: str",
+            severity=ConstraintSeverity.REQUIRED,
+            affects_tags=["user", "model"],
+            required_fields={"id": "UUID", "email": "str"},
+        )
+    )
+    engine.register(
+        TypedConstraint(
+            kind=ConstraintKind.TEST_GATE,
+            target="all modules",
+            requirement="must have test evidence",
+            severity=ConstraintSeverity.REQUIRED,
+            affects_tags=["auth", "api", "storage"],
+            required_evidence=["test_pass"],
+        )
+    )
 
     governor = MergeGovernor(engine=engine)
     main = VersionedGraph("main")
@@ -304,7 +306,10 @@ def run_convergent() -> tuple[int, int, int, int, bool, dict[str, str]]:
             InterfaceSpec(
                 name="AuthService",
                 kind=InterfaceKind.CLASS,
-                signature="register(email: str, password: str) -> User, login(email: str, password: str) -> str",
+                signature=(
+                    "register(email: str, password: str) -> User,"
+                    " login(email: str, password: str) -> str"
+                ),
                 tags=["auth", "service"],
             ),
         ],
@@ -339,7 +344,9 @@ def run_convergent() -> tuple[int, int, int, int, bool, dict[str, str]]:
             InterfaceSpec(
                 name="UserEndpoints",
                 kind=InterfaceKind.CLASS,
-                signature="get_user(user_id: UUID) -> dict, register(email: str, password: str) -> dict",
+                signature=(
+                    "get_user(user_id: UUID) -> dict, register(email: str, password: str) -> dict"
+                ),
                 tags=["api", "endpoints"],
             ),
         ],
@@ -370,7 +377,11 @@ def run_convergent() -> tuple[int, int, int, int, bool, dict[str, str]]:
             InterfaceSpec(
                 name="UserRepository",
                 kind=InterfaceKind.CLASS,
-                signature="save_user(user: User) -> None, get_user(user_id: UUID) -> User, get_user_by_email(email: str) -> User",
+                signature=(
+                    "save_user(user: User) -> None,"
+                    " get_user(user_id: UUID) -> User,"
+                    " get_user_by_email(email: str) -> User"
+                ),
                 tags=["storage", "repository"],
             ),
         ],
@@ -399,9 +410,13 @@ def run_convergent() -> tuple[int, int, int, int, bool, dict[str, str]]:
     # All three should merge cleanly
     all_merged = merge_a.success and merge_b.success and merge_c.success
 
-    # Count total conflicts from resolutions
+    # Count actual conflicts/adjustments from governor verdicts
     total_conflicts = 0
     total_adjustments = 0
+    for proposal in [proposal_a, proposal_b, proposal_c]:
+        if proposal.verdict.resolution:
+            total_conflicts += len(proposal.verdict.resolution.conflicts)
+            total_adjustments += len(proposal.verdict.resolution.adjustments)
 
     code = {
         "auth-agent": _generate_auth_code(),
@@ -498,8 +513,6 @@ def run_baseline() -> tuple[int, int, int, int, bool]:
     resolver.publish(intent_c_v1)
 
     # Rework cycle 1: B fixes id type (int -> UUID), still has name vs email
-    rework_1_conflicts = conflicts_b + conflicts_c
-
     # Rework cycle 2: B fixes name -> email, C fixes username -> email
     # (Simulated — in real life this requires human intervention or orchestrator)
     rework_cycles = 0
@@ -530,16 +543,12 @@ def run_baseline() -> tuple[int, int, int, int, bool]:
 def run_demo() -> DemoResult:
     """Run both convergent and baseline scenarios, compare results."""
     # Convergent run
-    (
-        conv_rework, conv_conflicts, conv_rounds,
-        conv_adjustments, conv_merged, conv_code
-    ) = run_convergent()
+    (conv_rework, conv_conflicts, conv_rounds, conv_adjustments, conv_merged, conv_code) = (
+        run_convergent()
+    )
 
     # Baseline run
-    (
-        base_rework, base_conflicts, base_rounds,
-        base_adjustments, base_merged
-    ) = run_baseline()
+    (base_rework, base_conflicts, base_rounds, base_adjustments, base_merged) = run_baseline()
 
     return DemoResult(
         convergent_rework_cycles=conv_rework,

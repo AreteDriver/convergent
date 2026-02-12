@@ -33,7 +33,6 @@ from convergent.intent import (
     InterfaceKind,
 )
 
-
 # ---------------------------------------------------------------------------
 # Edge types
 # ---------------------------------------------------------------------------
@@ -186,9 +185,7 @@ class StabilityWeights:
         if any(e.kind == EvidenceKind.CODE_COMMITTED for e in evidence):
             score += self.code_committed
 
-        dependents = sum(
-            1 for e in evidence if e.kind == EvidenceKind.CONSUMED_BY_OTHER
-        )
+        dependents = sum(1 for e in evidence if e.kind == EvidenceKind.CONSUMED_BY_OTHER)
         score += min(dependents * self.consumed_by_other, self.consumed_cap)
 
         conflicts = sum(1 for e in evidence if e.kind == EvidenceKind.CONFLICT)
@@ -241,11 +238,15 @@ class ResolutionPolicy:
     def __post_init__(self) -> None:
         if not self.severity_to_class:
             # Use object.__setattr__ since this is a frozen dataclass
-            object.__setattr__(self, "severity_to_class", {
-                ConstraintSeverity.CRITICAL.value: ConflictClass.HARD_FAIL.value,
-                ConstraintSeverity.REQUIRED.value: ConflictClass.AUTO_RESOLVE.value,
-                ConstraintSeverity.PREFERRED.value: ConflictClass.AUTO_RESOLVE.value,
-            })
+            object.__setattr__(
+                self,
+                "severity_to_class",
+                {
+                    ConstraintSeverity.CRITICAL.value: ConflictClass.HARD_FAIL.value,
+                    ConstraintSeverity.REQUIRED.value: ConflictClass.AUTO_RESOLVE.value,
+                    ConstraintSeverity.PREFERRED.value: ConflictClass.AUTO_RESOLVE.value,
+                },
+            )
 
     def classify_constraint_conflict(
         self,
@@ -509,11 +510,11 @@ class IntentGraphContract:
                         "condition": "Duplicate provision with stability gap",
                         "class": ConflictClass.AUTO_RESOLVE.value,
                         "action": "Higher-stability agent keeps provision; "
-                                  "lower receives ConsumeInstead.",
+                        "lower receives ConsumeInstead.",
                     },
                     {
                         "condition": "Equal-stability conflict "
-                                     f"(gap <= {DEFAULT_RESOLUTION_POLICY.stability_tie_epsilon})",
+                        f"(gap <= {DEFAULT_RESOLUTION_POLICY.stability_tie_epsilon})",
                         "class": ConflictClass.HUMAN_ESCALATION.value,
                         "action": "Surface to human. Cannot auto-resolve.",
                     },
@@ -527,29 +528,28 @@ class IntentGraphContract:
             "matching_rules": {
                 "name_overlap": {
                     "description": "Two names overlap if, after normalization "
-                                   "(lowercase, strip Model/Service/Handler/Controller/"
-                                   "Spec/Interface suffix, CamelCase split), one is "
-                                   "equal to, a prefix of, or contained in the other.",
+                    "(lowercase, strip Model/Service/Handler/Controller/"
+                    "Spec/Interface suffix, CamelCase split), one is "
+                    "equal to, a prefix of, or contained in the other.",
                 },
                 "tag_overlap": {
-                    "description": "Two interface specs overlap if they share "
-                                   "2 or more tags.",
+                    "description": "Two interface specs overlap if they share 2 or more tags.",
                     "threshold": 2,
                 },
                 "signature_compatibility": {
                     "description": "Signature B is compatible with A if B's fields "
-                                   "are a superset of A's fields with type normalization "
-                                   "(UUID↔uuid, String↔str, i64↔int, f64↔float, "
-                                   "Optional[X]↔X, Vec<X>↔list[X]).",
+                    "are a superset of A's fields with type normalization "
+                    "(UUID↔uuid, String↔str, i64↔int, f64↔float, "
+                    "Optional[X]↔X, Vec<X>↔list[X]).",
                 },
                 "constraint_applicability": {
                     "description": "A constraint applies to an intent if any of the "
-                                   "intent's interface tags overlap with the constraint's "
-                                   "affects_tags.",
+                    "intent's interface tags overlap with the constraint's "
+                    "affects_tags.",
                 },
                 "constraint_conflict": {
                     "description": "Two constraints conflict if their normalized targets "
-                                   "are equal but their requirements differ.",
+                    "are equal but their requirements differ.",
                 },
             },
         }

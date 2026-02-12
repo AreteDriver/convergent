@@ -15,20 +15,16 @@ Revolution test: these tests define the contract completely enough that
 a second client can be built from the contract spec + these tests alone.
 """
 
-import copy
 import uuid
 
 import pytest
-
 from convergent.contract import (
+    DEFAULT_CONTRACT,
+    DEFAULT_STABILITY_WEIGHTS,
     ConflictClass,
     ContractViolation,
-    DEFAULT_CONTRACT,
-    DEFAULT_RESOLUTION_POLICY,
-    DEFAULT_STABILITY_WEIGHTS,
     EdgeType,
     GraphInvariant,
-    IntentGraphContract,
     MutationType,
     ResolutionPolicy,
     StabilityWeights,
@@ -47,8 +43,7 @@ from convergent.intent import (
 )
 from convergent.replay import ReplayLog
 from convergent.resolver import IntentResolver
-from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
-
+from convergent.versioning import VersionedGraph
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -80,7 +75,8 @@ def _make_intent(
         id=intent_id or str(uuid.uuid4()),
         agent_id=agent_id,
         intent=intent_text,
-        provides=provides or [
+        provides=provides
+        or [
             InterfaceSpec(
                 name="TestInterface",
                 kind=InterfaceKind.CLASS,
@@ -123,6 +119,7 @@ class TestContractSerialization:
 
     def test_contract_to_json_roundtrip(self):
         import json
+
         json_str = DEFAULT_CONTRACT.to_json()
         parsed = json.loads(json_str)
         assert parsed["contract_version"] == "1.0.0"
@@ -428,9 +425,7 @@ class TestStabilityDeterminism:
             Evidence.test_pass("test_2"),
             Evidence.consumed_by("agent-b"),
         ]
-        intent = Intent(
-            agent_id="a", intent="test", evidence=evidence
-        )
+        intent = Intent(agent_id="a", intent="test", evidence=evidence)
         assert abs(weights.compute(evidence) - intent.compute_stability()) < 1e-10
 
     def test_base_stability(self):
@@ -523,9 +518,7 @@ class TestContentHashing:
         i1 = _make_intent(intent_id="x")
         i2 = _make_intent(
             intent_id="x",
-            constraints=[
-                Constraint(target="t", requirement="r", affects_tags=["t"])
-            ],
+            constraints=[Constraint(target="t", requirement="r", affects_tags=["t"])],
         )
         assert content_hash_intent(i1) != content_hash_intent(i2)
 
@@ -651,28 +644,32 @@ class TestGraphVersioning:
         assert len(result.merged_intents) == 0
 
     def test_merge_result_has_snapshot_on_success(self, vgraph):
-        vgraph.publish(_make_intent(
-            provides=[
-                InterfaceSpec(
-                    name="Logger",
-                    kind=InterfaceKind.CLASS,
-                    signature="log() -> None",
-                    tags=["logging"],
-                )
-            ],
-        ))
+        vgraph.publish(
+            _make_intent(
+                provides=[
+                    InterfaceSpec(
+                        name="Logger",
+                        kind=InterfaceKind.CLASS,
+                        signature="log() -> None",
+                        tags=["logging"],
+                    )
+                ],
+            )
+        )
         branch = vgraph.branch("feature")
-        branch.publish(_make_intent(
-            agent_id="b",
-            provides=[
-                InterfaceSpec(
-                    name="Metrics",
-                    kind=InterfaceKind.CLASS,
-                    signature="track() -> None",
-                    tags=["metrics"],
-                )
-            ],
-        ))
+        branch.publish(
+            _make_intent(
+                agent_id="b",
+                provides=[
+                    InterfaceSpec(
+                        name="Metrics",
+                        kind=InterfaceKind.CLASS,
+                        signature="track() -> None",
+                        tags=["metrics"],
+                    )
+                ],
+            )
+        )
         result = vgraph.merge(branch)
         assert result.success
         assert result.resulting_snapshot is not None
@@ -826,8 +823,8 @@ class TestDeterministicReplay:
 
     def test_replay_three_agents_deterministic(self):
         """Full 3-agent scenario: two independent replays produce same state."""
-        from convergent.demo import build_agent_a, build_agent_b, build_agent_c
         from convergent.agent import SimulationRunner
+        from convergent.demo import build_agent_a, build_agent_b, build_agent_c
 
         # Run 1: record all publishes
         resolver1 = IntentResolver(min_stability=0.0)

@@ -21,20 +21,17 @@ workflow, enforcing "no code commit without declared interfaces/assumptions"
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 from convergent.constraints import (
     ConstraintEngine,
     GateResult,
-    TypedConstraint,
 )
 from convergent.contract import (
     ConflictClass,
     ContractViolation,
     GraphInvariant,
     ResolutionPolicy,
-    validate_publish,
 )
 from convergent.economics import (
     Budget,
@@ -45,16 +42,11 @@ from convergent.economics import (
     EscalationPolicy,
 )
 from convergent.intent import (
-    Constraint,
-    ConstraintSeverity,
-    Evidence,
     Intent,
-    InterfaceSpec,
     ResolutionResult,
 )
-from convergent.resolver import IntentResolver, PythonGraphBackend
-from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
-
+from convergent.resolver import IntentResolver
+from convergent.versioning import MergeResult, VersionedGraph
 
 # ---------------------------------------------------------------------------
 # Governor verdict
@@ -89,8 +81,7 @@ class GovernorVerdict:
     @property
     def needs_human(self) -> bool:
         return any(
-            d.action == EscalationAction.ESCALATE_TO_HUMAN
-            for d in self.escalation_decisions
+            d.action == EscalationAction.ESCALATE_TO_HUMAN for d in self.escalation_decisions
         )
 
 
@@ -215,8 +206,7 @@ class MergeGovernor:
 
                 if decision.action == EscalationAction.ESCALATE_TO_HUMAN:
                     blocking.append(
-                        f"Escalation needed: {conflict.description} "
-                        f"({decision.reasoning})"
+                        f"Escalation needed: {conflict.description} ({decision.reasoning})"
                     )
                 elif decision.action == EscalationAction.BLOCK:
                     blocking.append(f"Blocked: {conflict.description}")
@@ -224,10 +214,7 @@ class MergeGovernor:
         if blocking:
             kind = (
                 VerdictKind.NEEDS_ESCALATION
-                if any(
-                    d.action == EscalationAction.ESCALATE_TO_HUMAN
-                    for d in escalation_decisions
-                )
+                if any(d.action == EscalationAction.ESCALATE_TO_HUMAN for d in escalation_decisions)
                 else VerdictKind.BLOCKED_BY_CONFLICT
             )
             return GovernorVerdict(
@@ -269,10 +256,7 @@ class MergeGovernor:
         Checks each new intent from source against target's constraints,
         then runs resolution for conflicts, then applies economics.
         """
-        my_ids = {
-            i.id
-            for i in target.resolver.backend.query_all(min_stability=0.0)
-        }
+        my_ids = {i.id for i in target.resolver.backend.query_all(min_stability=0.0)}
         their_intents = source.resolver.backend.query_all(min_stability=0.0)
         new_intents = [i for i in their_intents if i.id not in my_ids]
         new_intents.sort(key=lambda i: i.timestamp)
@@ -315,13 +299,9 @@ class MergeGovernor:
                     self.cost_report.record(decision)
 
                     if decision.action == EscalationAction.ESCALATE_TO_HUMAN:
-                        blocking.append(
-                            f"Merge escalation: {conflict.description}"
-                        )
+                        blocking.append(f"Merge escalation: {conflict.description}")
                     elif decision.action == EscalationAction.BLOCK:
-                        blocking.append(
-                            f"Merge blocked: {conflict.description}"
-                        )
+                        blocking.append(f"Merge blocked: {conflict.description}")
 
         if blocking:
             return GovernorVerdict(
@@ -390,9 +370,7 @@ class AgentBranch:
         The intent is NOT published yet — just evaluated.
         Call commit() to actually publish after approval.
         """
-        verdict = self.governor.evaluate_publish(
-            intent, self.graph.resolver
-        )
+        verdict = self.governor.evaluate_publish(intent, self.graph.resolver)
 
         proposal = ProposalResult(
             intent=intent,
@@ -418,8 +396,7 @@ class AgentBranch:
             raise ContractViolation(
                 invariant=GraphInvariant.APPEND_ONLY,
                 message=(
-                    f"Intent '{intent.id}' was not approved. "
-                    f"Reasons: {proposal.blocking_reasons}"
+                    f"Intent '{intent.id}' was not approved. Reasons: {proposal.blocking_reasons}"
                 ),
             )
         return self.graph.publish(intent)
@@ -435,8 +412,7 @@ class AgentBranch:
             return MergeResult(
                 success=False,
                 hard_failures=[
-                    (Intent(agent_id=self.agent_id, intent="merge"),
-                     reason)
+                    (Intent(agent_id=self.agent_id, intent="merge"), reason)
                     for reason in verdict.blocking_reasons
                 ],
             )

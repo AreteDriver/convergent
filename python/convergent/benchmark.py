@@ -21,14 +21,10 @@ Metrics collected:
 from __future__ import annotations
 
 import time
-import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 
 from convergent.agent import AgentAction, SimulatedAgent, SimulationRunner
-from convergent.constraints import ConstraintEngine, ConstraintKind, TypedConstraint
-from convergent.economics import Budget, CostModel, CoordinationCostReport, EscalationPolicy
-from convergent.governor import MergeGovernor
 from convergent.intent import (
     Constraint,
     ConstraintSeverity,
@@ -38,7 +34,6 @@ from convergent.intent import (
     InterfaceSpec,
 )
 from convergent.resolver import IntentResolver
-
 
 # ---------------------------------------------------------------------------
 # Scenario types
@@ -153,9 +148,7 @@ class BenchmarkSuite:
                 first, last = metrics[0], metrics[-1]
                 agent_ratio = last.agent_count / first.agent_count if first.agent_count else 1
                 conflict_ratio = (
-                    (last.conflict_rate / first.conflict_rate)
-                    if first.conflict_rate > 0
-                    else 0
+                    (last.conflict_rate / first.conflict_rate) if first.conflict_rate > 0 else 0
                 )
                 round_ratio = (
                     (last.convergence_rounds / first.convergence_rounds)
@@ -169,7 +162,7 @@ class BenchmarkSuite:
                     f"rounds {round_ratio:.2f}x"
                 )
                 if agent_ratio > 1 and round_ratio < agent_ratio:
-                    lines.append(f"    → SUBLINEAR scaling (rounds grow slower than agents)")
+                    lines.append("    → SUBLINEAR scaling (rounds grow slower than agents)")
 
         return "\n".join(lines)
 
@@ -179,57 +172,55 @@ class BenchmarkSuite:
 # ---------------------------------------------------------------------------
 
 
-def _build_independent_agents(
-    n: int, resolver: IntentResolver
-) -> list[SimulatedAgent]:
+def _build_independent_agents(n: int, resolver: IntentResolver) -> list[SimulatedAgent]:
     """N agents with completely independent scopes."""
     agents = []
     for i in range(n):
         agent = SimulatedAgent(f"agent-{i}", resolver)
-        agent.plan([
-            AgentAction(
-                intent=Intent(
-                    agent_id=f"agent-{i}",
-                    intent=f"Module {i}",
-                    provides=[
-                        InterfaceSpec(
-                            name=f"Svc{i}Alpha",
-                            kind=InterfaceKind.CLASS,
-                            signature=f"run(x: int) -> str",
-                            tags=[f"scope{i}", f"module{i}"],
-                        ),
+        agent.plan(
+            [
+                AgentAction(
+                    intent=Intent(
+                        agent_id=f"agent-{i}",
+                        intent=f"Module {i}",
+                        provides=[
+                            InterfaceSpec(
+                                name=f"Svc{i}Alpha",
+                                kind=InterfaceKind.CLASS,
+                                signature="run(x: int) -> str",
+                                tags=[f"scope{i}", f"module{i}"],
+                            ),
+                        ],
+                    ),
+                    post_evidence=[
+                        Evidence.code_committed(f"module{i}.py"),
+                        Evidence.test_pass(f"test_module{i}"),
                     ],
                 ),
-                post_evidence=[
-                    Evidence.code_committed(f"module{i}.py"),
-                    Evidence.test_pass(f"test_module{i}"),
-                ],
-            ),
-            AgentAction(
-                intent=Intent(
-                    agent_id=f"agent-{i}",
-                    intent=f"Module {i} complete",
-                    provides=[
-                        InterfaceSpec(
-                            name=f"Svc{i}Beta",
-                            kind=InterfaceKind.FUNCTION,
-                            signature=f"helper(y: str) -> bool",
-                            tags=[f"scope{i}", f"helper{i}"],
-                        ),
+                AgentAction(
+                    intent=Intent(
+                        agent_id=f"agent-{i}",
+                        intent=f"Module {i} complete",
+                        provides=[
+                            InterfaceSpec(
+                                name=f"Svc{i}Beta",
+                                kind=InterfaceKind.FUNCTION,
+                                signature="helper(y: str) -> bool",
+                                tags=[f"scope{i}", f"helper{i}"],
+                            ),
+                        ],
+                    ),
+                    post_evidence=[
+                        Evidence.test_pass(f"test_helper{i}"),
                     ],
                 ),
-                post_evidence=[
-                    Evidence.test_pass(f"test_helper{i}"),
-                ],
-            ),
-        ])
+            ]
+        )
         agents.append(agent)
     return agents
 
 
-def _build_shared_interface_agents(
-    n: int, resolver: IntentResolver
-) -> list[SimulatedAgent]:
+def _build_shared_interface_agents(n: int, resolver: IntentResolver) -> list[SimulatedAgent]:
     """N agents that all depend on a shared User interface.
     Agent 0 provides User at high stability; others consume it."""
     agents = []
@@ -237,71 +228,73 @@ def _build_shared_interface_agents(
         if i == 0:
             # Provider agent — high stability
             agent = SimulatedAgent(f"agent-{i}", resolver)
-            agent.plan([
-                AgentAction(
-                    intent=Intent(
-                        agent_id=f"agent-{i}",
-                        intent="User model provider",
-                        provides=[
-                            InterfaceSpec(
-                                name="User",
-                                kind=InterfaceKind.MODEL,
-                                signature="id: UUID, email: str",
-                                tags=["user", "model", "shared"],
-                            ),
-                        ],
-                        constraints=[
-                            Constraint(
-                                target="User model",
-                                requirement="must have id: UUID",
-                                affects_tags=["user", "model"],
-                            ),
+            agent.plan(
+                [
+                    AgentAction(
+                        intent=Intent(
+                            agent_id=f"agent-{i}",
+                            intent="User model provider",
+                            provides=[
+                                InterfaceSpec(
+                                    name="User",
+                                    kind=InterfaceKind.MODEL,
+                                    signature="id: UUID, email: str",
+                                    tags=["user", "model", "shared"],
+                                ),
+                            ],
+                            constraints=[
+                                Constraint(
+                                    target="User model",
+                                    requirement="must have id: UUID",
+                                    affects_tags=["user", "model"],
+                                ),
+                            ],
+                        ),
+                        post_evidence=[
+                            Evidence.code_committed("models.py"),
+                            Evidence.test_pass("test_user"),
+                            Evidence.test_pass("test_user_validation"),
                         ],
                     ),
-                    post_evidence=[
-                        Evidence.code_committed("models.py"),
-                        Evidence.test_pass("test_user"),
-                        Evidence.test_pass("test_user_validation"),
-                    ],
-                ),
-            ])
+                ]
+            )
         else:
             # Consumer agent — requires User, provides own scope
             agent = SimulatedAgent(f"agent-{i}", resolver)
-            agent.plan([
-                AgentAction(
-                    intent=Intent(
-                        agent_id=f"agent-{i}",
-                        intent=f"Feature {i} using User",
-                        provides=[
-                            InterfaceSpec(
-                                name=f"Feature{i}Ctrl",
-                                kind=InterfaceKind.CLASS,
-                                signature=f"handle(user_id: UUID) -> dict",
-                                tags=[f"feature{i}", "api"],
-                            ),
-                        ],
-                        requires=[
-                            InterfaceSpec(
-                                name="User",
-                                kind=InterfaceKind.MODEL,
-                                signature="id: UUID",
-                                tags=["user", "model", "shared"],
-                            ),
+            agent.plan(
+                [
+                    AgentAction(
+                        intent=Intent(
+                            agent_id=f"agent-{i}",
+                            intent=f"Feature {i} using User",
+                            provides=[
+                                InterfaceSpec(
+                                    name=f"Feature{i}Ctrl",
+                                    kind=InterfaceKind.CLASS,
+                                    signature="handle(user_id: UUID) -> dict",
+                                    tags=[f"feature{i}", "api"],
+                                ),
+                            ],
+                            requires=[
+                                InterfaceSpec(
+                                    name="User",
+                                    kind=InterfaceKind.MODEL,
+                                    signature="id: UUID",
+                                    tags=["user", "model", "shared"],
+                                ),
+                            ],
+                        ),
+                        post_evidence=[
+                            Evidence.code_committed(f"feature{i}.py"),
                         ],
                     ),
-                    post_evidence=[
-                        Evidence.code_committed(f"feature{i}.py"),
-                    ],
-                ),
-            ])
+                ]
+            )
         agents.append(agent)
     return agents
 
 
-def _build_high_contention_agents(
-    n: int, resolver: IntentResolver
-) -> list[SimulatedAgent]:
+def _build_high_contention_agents(n: int, resolver: IntentResolver) -> list[SimulatedAgent]:
     """N agents all trying to provide the same Config interface.
     Only the highest-stability one should win; others yield."""
     agents = []
@@ -318,69 +311,72 @@ def _build_high_contention_agents(
             evidence = [Evidence.code_committed("config_alt.py")]
 
         agent = SimulatedAgent(f"agent-{i}", resolver)
-        agent.plan([
-            AgentAction(
-                intent=Intent(
-                    agent_id=f"agent-{i}",
-                    intent=f"Config provider (agent {i})",
-                    provides=[
-                        InterfaceSpec(
-                            name="AppConfig",
-                            kind=InterfaceKind.CONFIG,
-                            signature="get(key: str) -> str, set(key: str, val: str) -> None",
-                            tags=["config", "settings", "app"],
-                        ),
-                    ],
+        agent.plan(
+            [
+                AgentAction(
+                    intent=Intent(
+                        agent_id=f"agent-{i}",
+                        intent=f"Config provider (agent {i})",
+                        provides=[
+                            InterfaceSpec(
+                                name="AppConfig",
+                                kind=InterfaceKind.CONFIG,
+                                signature="get(key: str) -> str, set(key: str, val: str) -> None",
+                                tags=["config", "settings", "app"],
+                            ),
+                        ],
+                    ),
+                    post_evidence=evidence,
                 ),
-                post_evidence=evidence,
-            ),
-        ])
+            ]
+        )
         agents.append(agent)
     return agents
 
 
-def _build_realistic_agents(
-    n: int, resolver: IntentResolver
-) -> list[SimulatedAgent]:
+def _build_realistic_agents(n: int, resolver: IntentResolver) -> list[SimulatedAgent]:
     """Mixed scenario: some shared interfaces, some independent, constraints."""
     agents = []
 
     # Agent 0: Auth provider (high stability)
     agent0 = SimulatedAgent("agent-0", resolver)
-    agent0.plan([
-        AgentAction(
-            intent=Intent(
-                agent_id="agent-0",
-                intent="Auth module",
-                provides=[
-                    InterfaceSpec(
-                        name="User",
-                        kind=InterfaceKind.MODEL,
-                        signature="id: UUID, email: str",
-                        tags=["user", "model", "auth"],
-                    ),
-                    InterfaceSpec(
-                        name="AuthSvc",
-                        kind=InterfaceKind.CLASS,
-                        signature="login(email: str, pw: str) -> Token",
-                        tags=["auth", "login"],
-                    ),
-                ],
-                constraints=[
-                    Constraint(
-                        target="User", requirement="id must be UUID",
-                        severity=ConstraintSeverity.REQUIRED,
-                        affects_tags=["user", "model"],
-                    ),
+    agent0.plan(
+        [
+            AgentAction(
+                intent=Intent(
+                    agent_id="agent-0",
+                    intent="Auth module",
+                    provides=[
+                        InterfaceSpec(
+                            name="User",
+                            kind=InterfaceKind.MODEL,
+                            signature="id: UUID, email: str",
+                            tags=["user", "model", "auth"],
+                        ),
+                        InterfaceSpec(
+                            name="AuthSvc",
+                            kind=InterfaceKind.CLASS,
+                            signature="login(email: str, pw: str) -> Token",
+                            tags=["auth", "login"],
+                        ),
+                    ],
+                    constraints=[
+                        Constraint(
+                            target="User",
+                            requirement="id must be UUID",
+                            severity=ConstraintSeverity.REQUIRED,
+                            affects_tags=["user", "model"],
+                        ),
+                    ],
+                ),
+                post_evidence=[
+                    Evidence.code_committed("auth.py"),
+                    Evidence.test_pass("test_auth"),
+                    Evidence.test_pass("test_login"),
                 ],
             ),
-            post_evidence=[
-                Evidence.code_committed("auth.py"),
-                Evidence.test_pass("test_auth"),
-                Evidence.test_pass("test_login"),
-            ],
-        ),
-    ])
+        ]
+    )
     agents.append(agent0)
 
     # Remaining agents: mix of consumers and independents
@@ -388,68 +384,74 @@ def _build_realistic_agents(
         agent = SimulatedAgent(f"agent-{i}", resolver)
         if i % 3 == 0:
             # Contender: also provides User (should yield to agent-0)
-            agent.plan([
-                AgentAction(
-                    intent=Intent(
-                        agent_id=f"agent-{i}",
-                        intent=f"Feature {i} with User",
-                        provides=[
-                            InterfaceSpec(
-                                name="User",
-                                kind=InterfaceKind.MODEL,
-                                signature="id: UUID, name: str",
-                                tags=["user", "model", f"feat{i}"],
-                            ),
-                        ],
+            agent.plan(
+                [
+                    AgentAction(
+                        intent=Intent(
+                            agent_id=f"agent-{i}",
+                            intent=f"Feature {i} with User",
+                            provides=[
+                                InterfaceSpec(
+                                    name="User",
+                                    kind=InterfaceKind.MODEL,
+                                    signature="id: UUID, name: str",
+                                    tags=["user", "model", f"feat{i}"],
+                                ),
+                            ],
+                        ),
                     ),
-                ),
-            ])
+                ]
+            )
         elif i % 3 == 1:
             # Consumer: requires User
-            agent.plan([
-                AgentAction(
-                    intent=Intent(
-                        agent_id=f"agent-{i}",
-                        intent=f"Feature {i} consumer",
-                        provides=[
-                            InterfaceSpec(
-                                name=f"Feat{i}Ctrl",
-                                kind=InterfaceKind.CLASS,
-                                signature=f"run(uid: UUID) -> dict",
-                                tags=[f"feat{i}", "api"],
-                            ),
-                        ],
-                        requires=[
-                            InterfaceSpec(
-                                name="User",
-                                kind=InterfaceKind.MODEL,
-                                signature="id: UUID",
-                                tags=["user", "model"],
-                            ),
-                        ],
+            agent.plan(
+                [
+                    AgentAction(
+                        intent=Intent(
+                            agent_id=f"agent-{i}",
+                            intent=f"Feature {i} consumer",
+                            provides=[
+                                InterfaceSpec(
+                                    name=f"Feat{i}Ctrl",
+                                    kind=InterfaceKind.CLASS,
+                                    signature="run(uid: UUID) -> dict",
+                                    tags=[f"feat{i}", "api"],
+                                ),
+                            ],
+                            requires=[
+                                InterfaceSpec(
+                                    name="User",
+                                    kind=InterfaceKind.MODEL,
+                                    signature="id: UUID",
+                                    tags=["user", "model"],
+                                ),
+                            ],
+                        ),
+                        post_evidence=[Evidence.code_committed(f"feat{i}.py")],
                     ),
-                    post_evidence=[Evidence.code_committed(f"feat{i}.py")],
-                ),
-            ])
+                ]
+            )
         else:
             # Independent
-            agent.plan([
-                AgentAction(
-                    intent=Intent(
-                        agent_id=f"agent-{i}",
-                        intent=f"Independent module {i}",
-                        provides=[
-                            InterfaceSpec(
-                                name=f"Indep{i}Svc",
-                                kind=InterfaceKind.CLASS,
-                                signature=f"process() -> bool",
-                                tags=[f"indep{i}", f"isolated{i}"],
-                            ),
-                        ],
+            agent.plan(
+                [
+                    AgentAction(
+                        intent=Intent(
+                            agent_id=f"agent-{i}",
+                            intent=f"Independent module {i}",
+                            provides=[
+                                InterfaceSpec(
+                                    name=f"Indep{i}Svc",
+                                    kind=InterfaceKind.CLASS,
+                                    signature="process() -> bool",
+                                    tags=[f"indep{i}", f"isolated{i}"],
+                                ),
+                            ],
+                        ),
+                        post_evidence=[Evidence.test_pass(f"test_indep{i}")],
                     ),
-                    post_evidence=[Evidence.test_pass(f"test_indep{i}")],
-                ),
-            ])
+                ]
+            )
         agents.append(agent)
 
     return agents
@@ -505,7 +507,7 @@ def run_benchmark(
         scenario=scenario.value,
         agent_count=agent_count,
         total_intents=result.total_intents,
-        total_resolutions=sum(len(l.resolutions) for l in result.agent_logs.values()),
+        total_resolutions=sum(len(log.resolutions) for log in result.agent_logs.values()),
         total_conflicts=result.total_conflicts,
         total_adjustments=result.total_adjustments,
         consume_instead_count=consume_count,

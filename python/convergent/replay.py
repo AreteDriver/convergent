@@ -13,7 +13,7 @@ Usage:
     log.record_resolve(intent, result)
 
     # Replay and verify
-    replay_result = log.replay(StabilityWeights(), ResolutionPolicy())
+    replay_result = log.replay()
     assert replay_result.deterministic  # Same content hash
 """
 
@@ -25,18 +25,14 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from convergent.contract import (
-    ResolutionPolicy,
-    StabilityWeights,
     content_hash_intents,
 )
 from convergent.intent import (
     Adjustment,
-    ConflictReport,
     Intent,
     ResolutionResult,
 )
 from convergent.resolver import IntentResolver, PythonGraphBackend
-
 
 # ---------------------------------------------------------------------------
 # Replay log entries
@@ -54,9 +50,7 @@ class ReplayEntry:
 
     operation: OperationType
     intent: Intent
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     # For resolve operations, the original result
     resolution_result: ResolutionResult | None = None
 
@@ -85,9 +79,7 @@ class ReplayLog:
             )
         )
 
-    def record_resolve(
-        self, intent: Intent, result: ResolutionResult
-    ) -> None:
+    def record_resolve(self, intent: Intent, result: ResolutionResult) -> None:
         """Record a resolve operation and its result."""
         self._entries.append(
             ReplayEntry(
@@ -105,26 +97,16 @@ class ReplayLog:
     def entry_count(self) -> int:
         return len(self._entries)
 
-    def replay(
-        self,
-        weights: StabilityWeights | None = None,
-        policy: ResolutionPolicy | None = None,
-    ) -> ReplayResult:
+    def replay(self) -> ReplayResult:
         """Replay all recorded operations against a fresh graph.
 
         Creates a new, empty graph and replays all operations in order.
         Compares the final graph state hash and individual resolution
         results to verify determinism.
 
-        Args:
-            weights: Stability weights to use. Defaults to standard weights.
-            policy: Resolution policy to use. Defaults to standard policy.
-
         Returns:
             ReplayResult with verification details.
         """
-        weights = weights or StabilityWeights()
-        policy = policy or ResolutionPolicy()
 
         # Fresh graph
         backend = PythonGraphBackend()
@@ -144,9 +126,7 @@ class ReplayLog:
                 # Replay resolve — compare results
                 intent_copy = copy.deepcopy(entry.intent)
                 replayed_result = resolver.resolve(intent_copy)
-                replayed_resolutions.append(
-                    (replayed_result, entry.resolution_result)
-                )
+                replayed_resolutions.append((replayed_result, entry.resolution_result))
 
         # Compute final state hash
         final_intents = resolver.backend.query_all(min_stability=0.0)
@@ -198,9 +178,7 @@ class ReplayResult:
 # ---------------------------------------------------------------------------
 
 
-def _resolutions_equivalent(
-    a: ResolutionResult, b: ResolutionResult | None
-) -> bool:
+def _resolutions_equivalent(a: ResolutionResult, b: ResolutionResult | None) -> bool:
     """Check if two resolution results are semantically equivalent.
 
     Compares adjustment kinds and conflict descriptions, ignoring
@@ -225,10 +203,7 @@ def _resolutions_equivalent(
         return False
 
     # Compare adopted constraint counts
-    if len(a.adopted_constraints) != len(b.adopted_constraints):
-        return False
-
-    return True
+    return len(a.adopted_constraints) == len(b.adopted_constraints)
 
 
 def _adj_key(adj: Adjustment) -> tuple[str, str]:

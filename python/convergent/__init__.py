@@ -1,7 +1,14 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.4.0"
+__version__ = "0.2.0"
 
+from convergent.benchmark import (
+    BenchmarkMetrics,
+    BenchmarkSuite,
+    ScenarioType,
+    run_benchmark,
+    run_scaling_suite,
+)
 from convergent.constraints import (
     ConstraintCheckResult,
     ConstraintEngine,
@@ -10,11 +17,11 @@ from convergent.constraints import (
     TypedConstraint,
 )
 from convergent.contract import (
-    ConflictClass,
-    ContractViolation,
     DEFAULT_CONTRACT,
     DEFAULT_RESOLUTION_POLICY,
     DEFAULT_STABILITY_WEIGHTS,
+    ConflictClass,
+    ContractViolation,
     EdgeType,
     GraphInvariant,
     IntentGraphContract,
@@ -32,6 +39,16 @@ from convergent.economics import (
     EscalationAction,
     EscalationDecision,
     EscalationPolicy,
+)
+from convergent.gates import (
+    CommandGate,
+    CompileGate,
+    ConstraintGate,
+    GateReport,
+    GateRunner,
+    GateRunResult,
+    MypyGate,
+    PytestGate,
 )
 from convergent.governor import (
     AgentBranch,
@@ -64,17 +81,6 @@ from convergent.semantic import (
     SemanticMatch,
     SemanticMatcher,
     TrajectoryPrediction,
-)
-from convergent.benchmark import BenchmarkMetrics, BenchmarkSuite, ScenarioType, run_benchmark, run_scaling_suite
-from convergent.gates import (
-    CommandGate,
-    CompileGate,
-    ConstraintGate,
-    GateReport,
-    GateRunResult,
-    GateRunner,
-    MypyGate,
-    PytestGate,
 )
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 

@@ -29,6 +29,7 @@ Usage:
 
 from __future__ import annotations
 
+import re
 import subprocess
 import time
 from abc import ABC, abstractmethod
@@ -36,7 +37,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from convergent.intent import Evidence, EvidenceKind, Intent
-
 
 # ---------------------------------------------------------------------------
 # Gate result
@@ -94,9 +94,7 @@ class GateReport:
         ]
         for r in self.results:
             status = "PASS" if r.passed else "FAIL"
-            lines.append(
-                f"  [{status}] {r.gate_name} ({r.duration_seconds:.2f}s)"
-            )
+            lines.append(f"  [{status}] {r.gate_name} ({r.duration_seconds:.2f}s)")
             if r.error_summary:
                 lines.append(f"         {r.error_summary}")
         return "\n".join(lines)
@@ -202,9 +200,7 @@ class PytestGate(ConstraintGate):
         if returncode == 0:
             # All tests passed
             passed = True
-            evidence.append(
-                Evidence.test_pass(f"pytest {self.test_path}: all tests passed")
-            )
+            evidence.append(Evidence.test_pass(f"pytest {self.test_path}: all tests passed"))
         elif returncode == -1:
             # Timeout or command not found
             passed = False
@@ -243,12 +239,11 @@ def _extract_pytest_summary(output: str) -> str:
     """Extract the summary line from pytest output."""
     for line in reversed(output.splitlines()):
         line = line.strip()
-        if line.startswith("FAILED") or line.startswith("="):
-            if "passed" in line or "failed" in line or "error" in line:
-                # Strip ANSI escape codes
-                import re
-                clean = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                return clean.strip("= ").strip()
+        if (line.startswith("FAILED") or line.startswith("=")) and (
+            "passed" in line or "failed" in line or "error" in line
+        ):
+            clean = re.sub(r"\x1b\[[0-9;]*m", "", line)
+            return clean.strip("= ").strip()
     return ""
 
 
@@ -297,9 +292,7 @@ class MypyGate(ConstraintGate):
 
         if returncode == 0:
             passed = True
-            evidence.append(
-                Evidence.test_pass(f"mypy {self.target_path}: no type errors")
-            )
+            evidence.append(Evidence.test_pass(f"mypy {self.target_path}: no type errors"))
         elif returncode == -1:
             passed = False
             error_summary = stderr.strip()[:200]
@@ -312,10 +305,7 @@ class MypyGate(ConstraintGate):
         else:
             passed = False
             # Count errors from mypy output
-            error_lines = [
-                l for l in stdout.splitlines()
-                if ": error:" in l
-            ]
+            error_lines = [ln for ln in stdout.splitlines() if ": error:" in ln]
             error_summary = f"{len(error_lines)} type error(s)"
             if error_lines:
                 error_summary += f" — first: {error_lines[0].strip()[:100]}"
@@ -375,11 +365,7 @@ class CompileGate(ConstraintGate):
 
         if returncode == 0:
             passed = True
-            evidence.append(
-                Evidence.code_committed(
-                    f"{self._gate_name}: compilation succeeded"
-                )
-            )
+            evidence.append(Evidence.code_committed(f"{self._gate_name}: compilation succeeded"))
         else:
             passed = False
             error_summary = (stderr or stdout).strip()[:200]
