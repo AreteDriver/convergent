@@ -9,17 +9,14 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from datetime import datetime, timezone
 
-from convergent.intent import (
-    Constraint,
-    ConstraintSeverity,
-    Evidence,
-    EvidenceKind,
-    Intent,
-    InterfaceKind,
-    InterfaceSpec,
+from convergent._serialization import (
+    constraint_to_dict,
+    evidence_to_dict,
+    row_to_intent,
+    spec_to_dict,
 )
+from convergent.intent import Intent, InterfaceSpec
 from convergent.matching import normalize_name
 
 logger = logging.getLogger(__name__)
@@ -49,83 +46,6 @@ CREATE TABLE IF NOT EXISTS intent_interfaces (
 CREATE INDEX IF NOT EXISTS idx_ifaces_name ON intent_interfaces(normalized_name);
 CREATE INDEX IF NOT EXISTS idx_ifaces_agent ON intent_interfaces(agent_id);
 """
-
-
-def _spec_to_dict(spec: InterfaceSpec) -> dict:
-    return {
-        "name": spec.name,
-        "kind": spec.kind.value,
-        "signature": spec.signature,
-        "module_path": spec.module_path,
-        "tags": spec.tags,
-    }
-
-
-def _dict_to_spec(d: dict) -> InterfaceSpec:
-    return InterfaceSpec(
-        name=d["name"],
-        kind=InterfaceKind(d["kind"]),
-        signature=d["signature"],
-        module_path=d.get("module_path", ""),
-        tags=d.get("tags", []),
-    )
-
-
-def _constraint_to_dict(c: Constraint) -> dict:
-    return {
-        "target": c.target,
-        "requirement": c.requirement,
-        "severity": c.severity.value,
-        "affects_tags": c.affects_tags,
-    }
-
-
-def _dict_to_constraint(d: dict) -> Constraint:
-    return Constraint(
-        target=d["target"],
-        requirement=d["requirement"],
-        severity=ConstraintSeverity(d.get("severity", "required")),
-        affects_tags=d.get("affects_tags", []),
-    )
-
-
-def _evidence_to_dict(e: Evidence) -> dict:
-    return {
-        "kind": e.kind.value,
-        "description": e.description,
-        "timestamp": e.timestamp.isoformat(),
-    }
-
-
-def _dict_to_evidence(d: dict) -> Evidence:
-    ts = d.get("timestamp")
-    timestamp = datetime.fromisoformat(ts) if ts else datetime.now(timezone.utc)
-    return Evidence(
-        kind=EvidenceKind(d["kind"]),
-        description=d["description"],
-        timestamp=timestamp,
-    )
-
-
-def _row_to_intent(row: sqlite3.Row) -> Intent:
-    """Reconstruct an Intent from a database row."""
-    provides = [_dict_to_spec(d) for d in json.loads(row["provides"])]
-    requires = [_dict_to_spec(d) for d in json.loads(row["requires"])]
-    constraints = [_dict_to_constraint(d) for d in json.loads(row["constraints"])]
-    evidence = [_dict_to_evidence(d) for d in json.loads(row["evidence"])]
-
-    return Intent(
-        id=row["id"],
-        agent_id=row["agent_id"],
-        timestamp=datetime.fromisoformat(row["timestamp"]),
-        intent=row["intent"],
-        provides=provides,
-        requires=requires,
-        constraints=constraints,
-        evidence=evidence,
-        stability=row["stability"],
-        parent_id=row["parent_id"],
-    )
 
 
 class SQLiteBackend:
@@ -160,10 +80,10 @@ class SQLiteBackend:
                 intent.agent_id,
                 intent.timestamp.isoformat(),
                 intent.intent,
-                json.dumps([_spec_to_dict(s) for s in intent.provides]),
-                json.dumps([_spec_to_dict(s) for s in intent.requires]),
-                json.dumps([_constraint_to_dict(c) for c in intent.constraints]),
-                json.dumps([_evidence_to_dict(e) for e in intent.evidence]),
+                json.dumps([spec_to_dict(s) for s in intent.provides]),
+                json.dumps([spec_to_dict(s) for s in intent.requires]),
+                json.dumps([constraint_to_dict(c) for c in intent.constraints]),
+                json.dumps([evidence_to_dict(e) for e in intent.evidence]),
                 stability,
                 intent.parent_id,
             ),
@@ -218,7 +138,7 @@ class SQLiteBackend:
             "SELECT * FROM intents WHERE stability >= ?",
             (min_stab,),
         ).fetchall()
-        return [_row_to_intent(r) for r in rows]
+        return [row_to_intent(r) for r in rows]
 
     def query_by_agent(self, agent_id: str) -> list[Intent]:
         """Query intents published by a specific agent."""
@@ -226,7 +146,7 @@ class SQLiteBackend:
             "SELECT * FROM intents WHERE agent_id = ?",
             (agent_id,),
         ).fetchall()
-        return [_row_to_intent(r) for r in rows]
+        return [row_to_intent(r) for r in rows]
 
     def find_overlapping(
         self,
@@ -282,7 +202,7 @@ class SQLiteBackend:
 
         results = []
         for row in rows:
-            intent = _row_to_intent(row)
+            intent = row_to_intent(row)
             their_specs = intent.provides + intent.requires
             for my_spec in specs:
                 if any(my_spec.structurally_overlaps(ts) for ts in their_specs):

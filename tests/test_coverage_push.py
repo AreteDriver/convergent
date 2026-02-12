@@ -982,22 +982,30 @@ class TestInitImportGuard:
 
 
 class TestMainModule:
-    """Cover __main__.py entry point (lines 3-5)."""
+    """Cover __main__.py CLI entry point."""
 
-    def test_main_calls_run_demo(self) -> None:
-        with patch("convergent.demo.run_demo") as mock_demo:
-            import convergent.__main__  # noqa: F401
+    def test_demo_subcommand_calls_run_demo(self) -> None:
+        from convergent.__main__ import main
 
-            # The module executes run_demo() on import
-            # But since it was already imported, use runpy
+        with patch("convergent.__main__._cmd_demo") as mock_cmd:
+            main(["demo"])
+            mock_cmd.assert_called_once()
+
+    def test_inspect_subcommand_missing_db(self) -> None:
         import contextlib
 
-        with patch("convergent.demo.run_demo") as mock_demo:
-            import runpy
+        from convergent.__main__ import main
 
-            with contextlib.suppress(SystemExit):
-                runpy.run_module("convergent", run_name="__main__", alter_sys=True)
-            mock_demo.assert_called()
+        with contextlib.suppress(SystemExit):
+            main(["inspect", "/nonexistent/db.sqlite"])
+
+    def test_no_subcommand_shows_help(self) -> None:
+        import contextlib
+
+        from convergent.__main__ import main
+
+        with contextlib.suppress(SystemExit):
+            main([])
 
 
 # ===================================================================

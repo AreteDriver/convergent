@@ -1,7 +1,8 @@
 """Convergent — Multi-agent coherence through ambient intent awareness."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
+from convergent.async_backend import AsyncBackendWrapper, AsyncGraphBackend
 from convergent.benchmark import (
     BenchmarkMetrics,
     BenchmarkSuite,
@@ -76,6 +77,7 @@ from convergent.matching import (
 )
 from convergent.replay import ReplayLog, ReplayResult
 from convergent.resolver import GraphBackend, IntentResolver, PythonGraphBackend
+from convergent.rust_backend import HAS_RUST, RustGraphBackend
 from convergent.semantic import (
     ConstraintApplicability,
     SemanticMatch,
@@ -132,8 +134,12 @@ __all__ = [
     "InterfaceKind",
     "InterfaceSpec",
     # Backends
+    "AsyncBackendWrapper",
+    "AsyncGraphBackend",
     "GraphBackend",
+    "HAS_RUST",
     "PythonGraphBackend",
+    "RustGraphBackend",
     "SQLiteBackend",
     # Replay
     "ReplayLog",

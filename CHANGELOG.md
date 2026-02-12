@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-12
+
+### Added
+- **CLI inspector** (`__main__.py`): `python -m convergent inspect <db>` with `--format {table,dot,html,matrix}`, `--min-stability`, `--agent`, `--show-evidence`, `--output` options. `python -m convergent demo` runs existing demo
+- **Async backend** (`async_backend.py`): `AsyncGraphBackend` protocol and `AsyncBackendWrapper` using `asyncio.to_thread()` — zero new dependencies, wraps any sync backend
+- **Rust backend parity** (`rust_backend.py`): `RustGraphBackend` wrapper for PyO3 `IntentGraph` with dict conversion handling InterfaceKind capitalization, missing severity, RFC3339 timestamps
+- **Serialization module** (`_serialization.py`): Extracted shared serialization helpers from `sqlite_backend.py` for reuse across backends
+
+### Changed
+- `sqlite_backend.py` imports serialization helpers from `_serialization.py` instead of defining inline
+
+### Tests
+- ~49 new tests: CLI inspector (~15), async backend (~14), Rust backend (~20)
+
 ## [0.3.0] - 2026-02-12
 
 ### Added
@@ -70,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Rust acceleration via `maturin develop --release`
 - GitHub Actions CI for Rust + Python matrix (3.10/3.11/3.12)
 
-[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/AreteDriver/convergent/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AreteDriver/convergent/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AreteDriver/convergent/releases/tag/v0.2.0
 [0.1.0]: https://github.com/AreteDriver/convergent/commit/73e2b29
