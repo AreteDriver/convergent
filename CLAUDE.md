@@ -37,3 +37,8 @@ PYTHONPATH=python python -m convergent
 - The append-only invariant of IntentGraph (core design principle)
 - Stability scoring weights without updating tests
 - PyO3 bindings without matching Python fallback implementations
+
+## Related Skills
+From [ai-skills](https://github.com/AreteDriver/ai-skills):
+- `intent-author` — teaches agents how to publish well-structured intents
+- `entity-resolver` — shared entity identity across parallel agents
