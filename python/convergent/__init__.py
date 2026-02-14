@@ -103,6 +103,7 @@ from convergent.protocol import (
 )
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
+from convergent.signal_bus import SignalBus
 from convergent.triumvirate import Triumvirate
 
 __all__ = [
@@ -214,6 +215,8 @@ __all__ = [
     "ScoreStore",
     # Phase 3: Triumvirate Voting
     "Triumvirate",
+    # Phase 3: Signal Bus
+    "SignalBus",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
