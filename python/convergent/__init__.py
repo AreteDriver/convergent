@@ -1,6 +1,6 @@
-"""Convergent — Multi-agent coherence through ambient intent awareness."""
+"""Convergent — Multi-agent coherence and coordination for AI systems."""
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from convergent.async_backend import AsyncBackendWrapper, AsyncGraphBackend
 from convergent.benchmark import (
@@ -33,6 +33,9 @@ from convergent.contract import (
     content_hash_intents,
     validate_publish,
 )
+
+# Phase 3: Coordination Protocol
+from convergent.coordination_config import CoordinationConfig
 from convergent.economics import (
     Budget,
     CoordinationCostReport,
@@ -41,6 +44,7 @@ from convergent.economics import (
     EscalationDecision,
     EscalationPolicy,
 )
+from convergent.flocking import FlockingCoordinator
 from convergent.gates import (
     CommandGate,
     CompileGate,
@@ -51,6 +55,7 @@ from convergent.gates import (
     MypyGate,
     PytestGate,
 )
+from convergent.gorgon_bridge import GorgonBridge
 from convergent.governor import (
     AgentBranch,
     GovernorVerdict,
@@ -75,21 +80,6 @@ from convergent.matching import (
     parse_signature,
     signatures_compatible,
 )
-from convergent.replay import ReplayLog, ReplayResult
-from convergent.resolver import GraphBackend, IntentResolver, PythonGraphBackend
-from convergent.rust_backend import HAS_RUST, RustGraphBackend
-from convergent.semantic import (
-    ConstraintApplicability,
-    SemanticMatch,
-    SemanticMatcher,
-    TrajectoryPrediction,
-)
-from convergent.sqlite_backend import SQLiteBackend
-from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
-from convergent.visualization import dot_graph, html_report, overlap_matrix, text_table
-
-# Phase 3: Coordination Protocol
-from convergent.coordination_config import CoordinationConfig
 from convergent.protocol import (
     AgentIdentity,
     ConsensusRequest,
@@ -101,13 +91,23 @@ from convergent.protocol import (
     Vote,
     VoteChoice,
 )
+from convergent.replay import ReplayLog, ReplayResult
+from convergent.resolver import GraphBackend, IntentResolver, PythonGraphBackend
+from convergent.rust_backend import HAS_RUST, RustGraphBackend
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
-from convergent.flocking import FlockingCoordinator
-from convergent.gorgon_bridge import GorgonBridge
+from convergent.semantic import (
+    ConstraintApplicability,
+    SemanticMatch,
+    SemanticMatcher,
+    TrajectoryPrediction,
+)
 from convergent.signal_bus import SignalBus
+from convergent.sqlite_backend import SQLiteBackend
 from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
+from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
+from convergent.visualization import dot_graph, html_report, overlap_matrix, text_table
 
 __all__ = [
     # Layer 1: Constraint Engine
