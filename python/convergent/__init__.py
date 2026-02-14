@@ -104,6 +104,7 @@ from convergent.protocol import (
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
 from convergent.flocking import FlockingCoordinator
+from convergent.gorgon_bridge import GorgonBridge
 from convergent.signal_bus import SignalBus
 from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
@@ -223,6 +224,8 @@ __all__ = [
     "StigmergyField",
     # Phase 3: Flocking
     "FlockingCoordinator",
+    # Phase 3: Gorgon Integration
+    "GorgonBridge",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
