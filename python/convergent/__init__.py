@@ -88,6 +88,20 @@ from convergent.sqlite_backend import SQLiteBackend
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 from convergent.visualization import dot_graph, html_report, overlap_matrix, text_table
 
+# Phase 3: Coordination Protocol
+from convergent.coordination_config import CoordinationConfig
+from convergent.protocol import (
+    AgentIdentity,
+    ConsensusRequest,
+    Decision,
+    DecisionOutcome,
+    QuorumLevel,
+    Signal,
+    StigmergyMarker,
+    Vote,
+    VoteChoice,
+)
+
 __all__ = [
     # Layer 1: Constraint Engine
     "ConstraintCheckResult",
@@ -181,6 +195,17 @@ __all__ = [
     "text_table",
     # Factories
     "create_delegation_checker",
+    # Phase 3: Coordination Protocol
+    "AgentIdentity",
+    "ConsensusRequest",
+    "CoordinationConfig",
+    "Decision",
+    "DecisionOutcome",
+    "QuorumLevel",
+    "Signal",
+    "StigmergyMarker",
+    "Vote",
+    "VoteChoice",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
