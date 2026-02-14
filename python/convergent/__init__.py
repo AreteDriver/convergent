@@ -101,6 +101,8 @@ from convergent.protocol import (
     Vote,
     VoteChoice,
 )
+from convergent.score_store import ScoreStore
+from convergent.scoring import PhiScorer
 
 __all__ = [
     # Layer 1: Constraint Engine
@@ -206,6 +208,9 @@ __all__ = [
     "StigmergyMarker",
     "Vote",
     "VoteChoice",
+    # Phase 3: Phi-Weighted Scoring
+    "PhiScorer",
+    "ScoreStore",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
