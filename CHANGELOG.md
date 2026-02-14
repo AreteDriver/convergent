@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-14
+
+### Added
+- **Phase 3: Coordination Protocol** — bio-inspired multi-agent coordination layer
+- `protocol.py` — Coordination data models: AgentIdentity, Vote, ConsensusRequest, Decision, StigmergyMarker, Signal, QuorumLevel, VoteChoice, DecisionOutcome enums
+- `coordination_config.py` — CoordinationConfig dataclass for Phase 3 settings
+- `scoring.py` + `score_store.py` — Phi-weighted scoring engine with Bayesian smoothing, exponential decay, per-agent per-domain trust scores, SQLite persistence
+- `triumvirate.py` — Voting engine with ANY/MAJORITY/UNANIMOUS/UNANIMOUS_HUMAN quorum, phi-weighted votes, tie-breaking, escalation, timeout handling
+- `signal_bus.py` — Filesystem-backed pub/sub for inter-agent communication with polling, targeted/broadcast delivery, expiry cleanup
+- `stigmergy.py` — Trail markers with exponential evaporation, reinforcement, context generation for agent prompts, SQLite persistence
+- `flocking.py` — Swarm coordination: alignment (pattern sharing), cohesion (drift detection), separation (file conflict avoidance)
+- `gorgon_bridge.py` — Single entry point for Gorgon integration: prompt enrichment, consensus voting, outcome recording, marker management
+
+### Changed
+- Version bumped to 0.5.0
+- Updated README with Phase 3 documentation, Mermaid architecture diagram, quick start examples, feature matrix
+- Description updated: "Multi-agent coherence and coordination for AI systems"
+
+### Tests
+- 240+ new tests across 7 test files (670+ total, 97% coverage)
+
 ## [0.4.0] - 2026-02-12
 
 ### Added
@@ -84,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Rust acceleration via `maturin develop --release`
 - GitHub Actions CI for Rust + Python matrix (3.10/3.11/3.12)
 
-[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/AreteDriver/convergent/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AreteDriver/convergent/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AreteDriver/convergent/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AreteDriver/convergent/releases/tag/v0.2.0
