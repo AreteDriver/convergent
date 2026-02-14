@@ -104,6 +104,7 @@ from convergent.protocol import (
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
 from convergent.signal_bus import SignalBus
+from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
 
 __all__ = [
@@ -217,6 +218,8 @@ __all__ = [
     "Triumvirate",
     # Phase 3: Signal Bus
     "SignalBus",
+    # Phase 3: Stigmergy
+    "StigmergyField",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
