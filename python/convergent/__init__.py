@@ -103,6 +103,7 @@ from convergent.protocol import (
 )
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
+from convergent.triumvirate import Triumvirate
 
 __all__ = [
     # Layer 1: Constraint Engine
@@ -211,6 +212,8 @@ __all__ = [
     # Phase 3: Phi-Weighted Scoring
     "PhiScorer",
     "ScoreStore",
+    # Phase 3: Triumvirate Voting
+    "Triumvirate",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
