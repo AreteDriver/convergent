@@ -3,21 +3,18 @@
 Run: PYTHONPATH=python pytest tests/test_benchmarks.py --benchmark-only
 """
 
-import pytest
-
 from convergent import (
     Intent,
     IntentResolver,
     InterfaceKind,
     InterfaceSpec,
     PythonGraphBackend,
-    run_benchmark,
     ScenarioType,
+    run_benchmark,
 )
 from convergent.constraints import ConstraintEngine, ConstraintKind, TypedConstraint
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
-
 
 # ═══════════════════════════════════════════════════════════════════
 # Helpers
@@ -31,14 +28,18 @@ def _make_intent(agent_id: str, name: str, provides: list[str], requires: list[s
         intent=f"Implement {name}",
         provides=[
             InterfaceSpec(
-                name=n, kind=InterfaceKind.FUNCTION, signature="(x: str) -> str",
+                name=n,
+                kind=InterfaceKind.FUNCTION,
+                signature="(x: str) -> str",
                 tags=["api", name.lower()],
             )
             for n in provides
         ],
         requires=[
             InterfaceSpec(
-                name=n, kind=InterfaceKind.FUNCTION, signature="(x: str) -> str",
+                name=n,
+                kind=InterfaceKind.FUNCTION,
+                signature="(x: str) -> str",
                 tags=["api", name.lower()],
             )
             for n in requires
@@ -145,13 +146,11 @@ class TestPhiScoringBenchmark:
         """Benchmark: calculate_phi_score with 100 historical outcomes."""
         store = ScoreStore(":memory:")
         scorer = PhiScorer(store=store)
-        outcomes = [
-            ("approved", float(i * 0.5)) for i in range(70)
-        ] + [
-            ("rejected", float(i * 0.3)) for i in range(20)
-        ] + [
-            ("failed", float(i * 0.8)) for i in range(10)
-        ]
+        outcomes = (
+            [("approved", float(i * 0.5)) for i in range(70)]
+            + [("rejected", float(i * 0.3)) for i in range(20)]
+            + [("failed", float(i * 0.8)) for i in range(10)]
+        )
 
         score = benchmark(scorer.calculate_phi_score, outcomes)
         assert 0.0 < score < 1.0
