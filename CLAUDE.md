@@ -61,7 +61,7 @@ This is an open-source companion to [Gorgon](https://github.com/AreteDriver/Gorg
 ```
 convergent/
 ├── CLAUDE.md                  ← YOU ARE HERE
-├── pyproject.toml             ← v0.5.0, python >=3.10, zero deps
+├── pyproject.toml             ← v1.0.0, python >=3.10, zero deps
 ├── Cargo.toml                 ← Rust/PyO3 build config
 ├── README.md
 ├── CHANGELOG.md
@@ -165,7 +165,7 @@ Same as Gorgon:
 - **SQLite pattern:** See `sqlite_backend.py` and `score_store.py` for the established patterns (WAL mode, `check_same_thread=False`). New persistence code should follow the same conventions.
 - **Stigmergy has its own SQLite DB** — separate from score_store for composability. GorgonBridge uses `Path(db_path).with_suffix(".stigmergy.db")`.
 
-## Current State (v0.6.0)
+## Current State (v1.0.0)
 
 ### Phase 1-2: Intent Graph + Intelligence (Complete)
 - **33 production modules**, 800+ tests, 99% coverage

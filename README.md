@@ -172,14 +172,14 @@ maturin develop --release && pytest tests/ -v
 ruff check python/ tests/ && ruff format --check python/ tests/
 ```
 
-670+ tests, 97% coverage, CI green.
+800+ tests, 99% coverage, CI green.
 
 ## Roadmap
 
-- **v0.6.0** (current): Pluggable signal bus (SQLite cross-process + filesystem), decision history query API
+- **v1.0.0** (current): Stable API contract, published to PyPI, PEP 561 py.typed
+- **v0.6.0**: Pluggable signal bus (SQLite cross-process + filesystem), decision history query API
 - **v0.5.0**: Coordination protocol (triumvirate voting, stigmergy, flocking, signal bus)
 - **v0.4.0**: CLI inspector, async backend, Rust backend parity
-- **v1.0.0** (next): Stable API contract, published to PyPI, documentation site
 
 ## License
 

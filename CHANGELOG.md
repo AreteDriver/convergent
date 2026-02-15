@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-14
+
+### Changed
+- **Stable API contract** — v1.0.0 declares the public API stable under semver
+- Published to PyPI (`pip install convergent`)
+- PEP 561 `py.typed` marker for type checker support
+- Classifier upgraded to Production/Stable
+- Added Python 3.13 classifier
+- Tag-triggered publish workflow (trusted publishing via OIDC)
+
 ## [0.6.0] - 2026-02-14
 
 ### Added
@@ -130,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Rust acceleration via `maturin develop --release`
 - GitHub Actions CI for Rust + Python matrix (3.10/3.11/3.12)
 
-[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/convergent/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/AreteDriver/convergent/compare/v0.6.0...v1.0.0
 [0.6.0]: https://github.com/AreteDriver/convergent/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AreteDriver/convergent/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AreteDriver/convergent/compare/v0.3.0...v0.4.0
