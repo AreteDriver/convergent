@@ -111,5 +111,11 @@ fn bench_find_overlapping(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_publish, bench_query_all, bench_resolve, bench_find_overlapping);
+criterion_group!(
+    benches,
+    bench_publish,
+    bench_query_all,
+    bench_resolve,
+    bench_find_overlapping
+);
 criterion_main!(benches);
