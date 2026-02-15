@@ -1,8 +1,8 @@
 """Lightweight pub/sub signal bus for inter-agent communication.
 
-Filesystem-based: signals are written as JSON files to a signals directory.
-Polling-based consumption with configurable interval. Thread-safe publish
-and subscribe.
+Orchestrates subscriber management, polling, and dispatch. Delegates
+storage to a pluggable ``SignalBackend``. Defaults to
+``FilesystemSignalBackend`` for backward compatibility.
 
 Signals are how agents say: "I'm blocked on X", "I finished Y, you can
 start Z", "I found a conflict in file W."
@@ -10,15 +10,15 @@ start Z", "I found a conflict in file W."
 
 from __future__ import annotations
 
-import json
 import logging
 import threading
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from convergent.protocol import Signal
+from convergent.signal_backend import FilesystemSignalBackend, SignalBackend
 
 logger = logging.getLogger(__name__)
 
@@ -42,42 +42,60 @@ class _SubscriberEntry:
 
 
 class SignalBus:
-    """Pub/sub signal bus backed by filesystem.
+    """Pub/sub signal bus with pluggable backend.
 
-    Signals are stored as JSON files in a directory. Subscribers register
+    Signals are stored via a ``SignalBackend``. Subscribers register
     callbacks for specific signal types. A polling thread reads new signals
     and dispatches to matching subscribers.
 
     Args:
-        signals_dir: Directory to store signal files.
+        signals_dir: Directory for filesystem backend. Ignored if ``backend``
+            is provided. Kept for backward compatibility.
         poll_interval: Seconds between polling cycles.
+        backend: Explicit backend. If None, creates a
+            ``FilesystemSignalBackend`` from ``signals_dir``.
+        consumer_id: Identifier for this consumer. Different consumers
+            on the same backend track processing state independently.
     """
 
-    def __init__(self, signals_dir: Path, poll_interval: float = 1.0) -> None:
-        self._signals_dir = Path(signals_dir)
-        self._signals_dir.mkdir(parents=True, exist_ok=True)
+    def __init__(
+        self,
+        signals_dir: Path | None = None,
+        poll_interval: float = 1.0,
+        backend: SignalBackend | None = None,
+        consumer_id: str = "default",
+    ) -> None:
+        if backend is not None:
+            self._backend = backend
+        elif signals_dir is not None:
+            self._backend = FilesystemSignalBackend(signals_dir)
+        else:
+            raise ValueError("Either signals_dir or backend must be provided")
+
+        self._consumer_id = consumer_id
         self._poll_interval = poll_interval
         self._subscribers: dict[str, list[_SubscriberEntry]] = {}
         self._lock = threading.Lock()
         self._polling = False
         self._poll_thread: threading.Thread | None = None
-        # Track processed files to avoid redelivery
-        self._processed: set[str] = set()
+
+    @property
+    def backend(self) -> SignalBackend:
+        """Access the underlying storage backend."""
+        return self._backend
+
+    @property
+    def consumer_id(self) -> str:
+        """This bus's consumer identity."""
+        return self._consumer_id
 
     def publish(self, signal: Signal) -> None:
         """Publish a signal to the bus.
 
-        Writes a JSON file to the signals directory.
-
         Args:
             signal: The signal to publish.
         """
-        # Filename: {timestamp}_{signal_type}_{source_agent}.json
-        # Replace colons in timestamp for filesystem safety
-        safe_ts = signal.timestamp.replace(":", "-").replace("+", "p")
-        filename = f"{safe_ts}_{signal.signal_type}_{signal.source_agent}.json"
-        filepath = self._signals_dir / filename
-        filepath.write_text(signal.to_json(), encoding="utf-8")
+        self._backend.store_signal(signal)
         logger.info(
             "Published signal %s from %s (target=%s)",
             signal.signal_type,
@@ -158,33 +176,25 @@ class SignalBus:
     def poll_once(self) -> list[Signal]:
         """Poll for new signals once (synchronous).
 
-        Reads unprocessed signal files, dispatches to subscribers,
-        and returns the signals found.
+        Reads unprocessed signals via the backend, dispatches to
+        subscribers, and marks them as processed.
 
         Returns:
             List of new signals found during this poll cycle.
         """
-        new_signals = []
-        signal_files = sorted(self._signals_dir.glob("*.json"))
+        unprocessed = self._backend.get_unprocessed(self._consumer_id)
+        ids: list[str] = []
+        signals: list[Signal] = []
 
-        for filepath in signal_files:
-            fname = filepath.name
-            if fname in self._processed:
-                continue
-
-            try:
-                raw = filepath.read_text(encoding="utf-8")
-                signal = Signal.from_json(raw)
-            except (json.JSONDecodeError, TypeError, KeyError):
-                logger.warning("Skipping malformed signal file: %s", fname)
-                self._processed.add(fname)
-                continue
-
-            self._processed.add(fname)
-            new_signals.append(signal)
+        for backend_id, signal in unprocessed:
+            ids.append(backend_id)
+            signals.append(signal)
             self._dispatch(signal)
 
-        return new_signals
+        if ids:
+            self._backend.mark_processed(self._consumer_id, ids)
+
+        return signals
 
     def get_signals(
         self,
@@ -192,7 +202,7 @@ class SignalBus:
         since: datetime | None = None,
         source_agent: str | None = None,
     ) -> list[Signal]:
-        """Read signals from the directory, optionally filtered.
+        """Read signals, optionally filtered.
 
         Args:
             signal_type: Filter by signal type. None for all.
@@ -202,75 +212,35 @@ class SignalBus:
         Returns:
             List of matching signals, ordered by timestamp.
         """
-        signals = []
-        for filepath in sorted(self._signals_dir.glob("*.json")):
-            try:
-                raw = filepath.read_text(encoding="utf-8")
-                signal = Signal.from_json(raw)
-            except (json.JSONDecodeError, TypeError, KeyError):
-                continue
-
-            if signal_type is not None and signal.signal_type != signal_type:
-                continue
-            if source_agent is not None and signal.source_agent != source_agent:
-                continue
-            if since is not None:
-                sig_time = datetime.fromisoformat(signal.timestamp)
-                if sig_time.tzinfo is None:
-                    sig_time = sig_time.replace(tzinfo=timezone.utc)
-                if sig_time <= since:
-                    continue
-
-            signals.append(signal)
-
-        return signals
+        return self._backend.get_signals(
+            signal_type=signal_type,
+            since=since,
+            source_agent=source_agent,
+        )
 
     def cleanup_expired(self, max_age_seconds: int = 3600) -> int:
-        """Remove signal files older than max_age_seconds.
+        """Remove signals older than max_age_seconds.
 
         Args:
             max_age_seconds: Maximum age in seconds before deletion.
 
         Returns:
-            Count of files deleted.
+            Count of signals deleted.
         """
-        now = datetime.now(timezone.utc)
-        deleted = 0
-
-        for filepath in self._signals_dir.glob("*.json"):
-            try:
-                raw = filepath.read_text(encoding="utf-8")
-                signal = Signal.from_json(raw)
-                sig_time = datetime.fromisoformat(signal.timestamp)
-                if sig_time.tzinfo is None:
-                    sig_time = sig_time.replace(tzinfo=timezone.utc)
-                age = (now - sig_time).total_seconds()
-                if age > max_age_seconds:
-                    filepath.unlink()
-                    self._processed.discard(filepath.name)
-                    deleted += 1
-            except (json.JSONDecodeError, TypeError, KeyError, OSError):
-                continue
-
-        if deleted:
-            logger.info("Cleaned up %d expired signals", deleted)
-        return deleted
+        return self._backend.cleanup_expired(max_age_seconds)
 
     def clear(self) -> int:
-        """Remove all signal files and reset processed set.
+        """Remove all signals and reset state.
 
         Returns:
-            Count of files deleted.
+            Count of signals deleted.
         """
-        deleted = 0
-        for filepath in self._signals_dir.glob("*.json"):
-            try:
-                filepath.unlink()
-                deleted += 1
-            except OSError:
-                continue
-        self._processed.clear()
-        return deleted
+        return self._backend.clear()
+
+    def close(self) -> None:
+        """Stop polling and close the backend."""
+        self.stop_polling()
+        self._backend.close()
 
     @property
     def is_polling(self) -> bool:

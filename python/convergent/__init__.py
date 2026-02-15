@@ -102,6 +102,7 @@ from convergent.semantic import (
     SemanticMatcher,
     TrajectoryPrediction,
 )
+from convergent.signal_backend import FilesystemSignalBackend, SignalBackend
 from convergent.signal_bus import SignalBus
 from convergent.sqlite_backend import SQLiteBackend
 from convergent.stigmergy import StigmergyField
@@ -219,6 +220,8 @@ __all__ = [
     # Phase 3: Triumvirate Voting
     "Triumvirate",
     # Phase 3: Signal Bus
+    "FilesystemSignalBackend",
+    "SignalBackend",
     "SignalBus",
     # Phase 3: Stigmergy
     "StigmergyField",
