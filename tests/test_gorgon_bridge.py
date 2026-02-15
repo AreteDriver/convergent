@@ -302,6 +302,43 @@ class TestSignalBusBackendSelection:
         bridge.close()
 
 
+class TestDecisionHistoryViabridge:
+    def test_get_decision_history(self, bridge: GorgonBridge) -> None:
+        request_id = bridge.request_consensus("task-1", "q", "c")
+        bridge.submit_agent_vote(request_id, "a1", "r", "m", "approve", 0.9, "ok")
+        bridge.evaluate(request_id)
+        history = bridge.get_decision_history()
+        assert len(history) == 1
+        assert history[0]["task_id"] == "task-1"
+        assert history[0]["outcome"] == "approved"
+
+    def test_get_decision_history_filtered(self, bridge: GorgonBridge) -> None:
+        r1 = bridge.request_consensus("task-1", "q1", "c")
+        bridge.submit_agent_vote(r1, "a1", "r", "m", "approve", 0.9, "ok")
+        bridge.evaluate(r1)
+        r2 = bridge.request_consensus("task-2", "q2", "c")
+        bridge.submit_agent_vote(r2, "a1", "r", "m", "approve", 0.9, "ok")
+        bridge.evaluate(r2)
+        history = bridge.get_decision_history(task_id="task-1")
+        assert len(history) == 1
+
+    def test_get_agent_vote_stats(self, bridge: GorgonBridge) -> None:
+        r1 = bridge.request_consensus("t1", "q", "c")
+        bridge.submit_agent_vote(r1, "a1", "r", "m", "approve", 0.9, "ok")
+        bridge.evaluate(r1)
+        r2 = bridge.request_consensus("t2", "q", "c")
+        bridge.submit_agent_vote(r2, "a1", "r", "m", "reject", 0.5, "no")
+        bridge.evaluate(r2)
+        stats = bridge.get_agent_vote_stats("a1")
+        assert stats["total"] == 2
+        assert stats["approve_count"] == 1
+        assert stats["reject_count"] == 1
+
+    def test_get_agent_vote_stats_empty(self, bridge: GorgonBridge) -> None:
+        stats = bridge.get_agent_vote_stats("nonexistent")
+        assert stats["total"] == 0
+
+
 class TestClose:
     def test_close_does_not_raise(self, bridge: GorgonBridge) -> None:
         bridge.close()  # Should not raise

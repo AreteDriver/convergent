@@ -37,9 +37,15 @@ class Triumvirate:
         config: Coordination configuration.
     """
 
-    def __init__(self, scorer: PhiScorer, config: CoordinationConfig) -> None:
+    def __init__(
+        self,
+        scorer: PhiScorer,
+        config: CoordinationConfig,
+        store: object | None = None,
+    ) -> None:
         self._scorer = scorer
         self._config = config
+        self._store = store  # Optional ScoreStore for decision persistence
         self._requests: dict[str, ConsensusRequest] = {}
         self._votes: dict[str, list[Vote]] = {}
         self._decisions: dict[str, Decision] = {}
@@ -138,6 +144,7 @@ class Triumvirate:
                 reasoning_summary="No votes received or timeout exceeded",
             )
             self._decisions[request_id] = decision
+            self._persist_decision(decision)
             return decision
 
         # Check for escalations first
@@ -149,6 +156,7 @@ class Triumvirate:
                 reasoning_summary=self._summarize_reasoning(votes),
             )
             self._decisions[request_id] = decision
+            self._persist_decision(decision)
             return decision
 
         # Calculate weighted totals
@@ -167,6 +175,7 @@ class Triumvirate:
             reasoning_summary=self._summarize_reasoning(votes),
         )
         self._decisions[request_id] = decision
+        self._persist_decision(decision)
         logger.info(
             "Decision for %s: %s (approve=%.3f, reject=%.3f)",
             request_id,
@@ -197,6 +206,19 @@ class Triumvirate:
             List of Decisions for this task, ordered by creation time.
         """
         return [d for d in self._decisions.values() if d.request.task_id == task_id]
+
+    def _persist_decision(self, decision: Decision) -> None:
+        """Persist a decision to the score store (graceful degradation)."""
+        if self._store is None:
+            return
+        try:
+            self._store.record_decision(decision)  # type: ignore[attr-defined]
+        except Exception:
+            logger.warning(
+                "Failed to persist decision %s",
+                decision.request.request_id,
+                exc_info=True,
+            )
 
     @staticmethod
     def _evaluate_quorum(

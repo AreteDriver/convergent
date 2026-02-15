@@ -56,7 +56,7 @@ class GorgonBridge:
         self._scorer = PhiScorer(self._store)
 
         # Voting
-        self._triumvirate = Triumvirate(self._scorer, self._config)
+        self._triumvirate = Triumvirate(self._scorer, self._config, store=self._store)
 
         # Stigmergy (separate DB to keep concerns isolated)
         stigmergy_db = self._config.db_path
@@ -292,6 +292,40 @@ class GorgonBridge:
             List of Decisions for this task.
         """
         return self._triumvirate.get_vote_history(task_id)
+
+    def get_decision_history(
+        self,
+        task_id: str | None = None,
+        outcome: str | None = None,
+        since: str | None = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """Query persisted decision history.
+
+        Args:
+            task_id: Filter by task. None for all.
+            outcome: Filter by outcome string (e.g. "approved"). None for all.
+            since: ISO 8601 timestamp cutoff. None for all.
+            limit: Maximum results (default 100).
+
+        Returns:
+            List of decision summary dicts.
+        """
+        return self._store.get_decision_history(
+            task_id=task_id, outcome=outcome, since=since, limit=limit
+        )
+
+    def get_agent_vote_stats(self, agent_id: str) -> dict:
+        """Get voting statistics for an agent.
+
+        Args:
+            agent_id: The agent to look up.
+
+        Returns:
+            Dict with total, approve/reject/abstain/escalate counts,
+            avg_confidence.
+        """
+        return self._store.get_agent_vote_stats(agent_id)
 
     def leave_marker(
         self,

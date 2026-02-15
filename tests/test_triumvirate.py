@@ -371,6 +371,74 @@ class TestAgentCount:
         assert decision.outcome is DecisionOutcome.APPROVED
 
 
+# --- Decision persistence ---
+
+
+class TestDecisionPersistence:
+    def test_evaluate_persists_to_store(self, scorer: PhiScorer) -> None:
+        store = ScoreStore(":memory:")
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+        req = tri.create_request("t", "q", "c")
+        tri.submit_vote(req.request_id, _vote(_agent("a1"), VoteChoice.APPROVE))
+        tri.evaluate(req.request_id)
+        history = store.get_decision_history()
+        assert len(history) == 1
+        assert history[0]["outcome"] == "approved"
+
+    def test_deadlock_persists_to_store(self, scorer: PhiScorer) -> None:
+        store = ScoreStore(":memory:")
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+        req = tri.create_request("t", "q", "c")
+        # No votes → deadlock
+        tri.evaluate(req.request_id)
+        history = store.get_decision_history()
+        assert len(history) == 1
+        assert history[0]["outcome"] == "deadlock"
+
+    def test_escalation_persists_to_store(self, scorer: PhiScorer) -> None:
+        store = ScoreStore(":memory:")
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+        req = tri.create_request("t", "q", "c")
+        tri.submit_vote(req.request_id, _vote(_agent("a1"), VoteChoice.ESCALATE))
+        tri.evaluate(req.request_id)
+        history = store.get_decision_history()
+        assert len(history) == 1
+        assert history[0]["outcome"] == "escalated"
+
+    def test_no_store_no_error(self, scorer: PhiScorer) -> None:
+        """Triumvirate without store still works — graceful degradation."""
+        tri = Triumvirate(scorer, CoordinationConfig())  # No store
+        req = tri.create_request("t", "q", "c")
+        tri.submit_vote(req.request_id, _vote(_agent("a1"), VoteChoice.APPROVE))
+        decision = tri.evaluate(req.request_id)
+        assert decision.outcome is DecisionOutcome.APPROVED
+
+    def test_persist_failure_graceful(self, scorer: PhiScorer) -> None:
+        """If store.record_decision raises, evaluate still returns the decision."""
+        from unittest.mock import MagicMock
+
+        bad_store = MagicMock()
+        bad_store.record_decision.side_effect = RuntimeError("db error")
+        tri = Triumvirate(scorer, CoordinationConfig(), store=bad_store)
+        req = tri.create_request("t", "q", "c")
+        tri.submit_vote(req.request_id, _vote(_agent("a1"), VoteChoice.APPROVE))
+        decision = tri.evaluate(req.request_id)
+        assert decision.outcome is DecisionOutcome.APPROVED
+        bad_store.record_decision.assert_called_once()
+
+    def test_votes_persisted_with_decision(self, scorer: PhiScorer) -> None:
+        store = ScoreStore(":memory:")
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+        req = tri.create_request("t", "q", "c")
+        tri.submit_vote(req.request_id, _vote(_agent("a1", 0.8), VoteChoice.APPROVE))
+        tri.submit_vote(req.request_id, _vote(_agent("a2", 0.6), VoteChoice.REJECT))
+        tri.evaluate(req.request_id)
+        records = store.get_vote_records(request_id=req.request_id)
+        assert len(records) == 2
+        choices = {r["choice"] for r in records}
+        assert choices == {"approve", "reject"}
+
+
 # --- Public API ---
 
 

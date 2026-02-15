@@ -104,8 +104,8 @@ from convergent.semantic import (
 )
 from convergent.signal_backend import FilesystemSignalBackend, SignalBackend
 from convergent.signal_bus import SignalBus
-from convergent.sqlite_signal_backend import SQLiteSignalBackend
 from convergent.sqlite_backend import SQLiteBackend
+from convergent.sqlite_signal_backend import SQLiteSignalBackend
 from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph

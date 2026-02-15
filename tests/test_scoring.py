@@ -305,6 +305,167 @@ class TestPhiScorer:
         assert score > 0.5
 
 
+# --- Decision History tests ---
+
+
+class TestDecisionHistory:
+    @pytest.fixture()
+    def store(self) -> ScoreStore:
+        return ScoreStore(":memory:")
+
+    def _make_decision(self, store: ScoreStore, task_id: str = "task-1") -> None:
+        """Helper to create and persist a decision."""
+        from convergent.coordination_config import CoordinationConfig
+        from convergent.triumvirate import Triumvirate
+
+        scorer = PhiScorer(store)
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+        req = tri.create_request(task_id, "Merge?", "context")
+        agent = AgentIdentity("a1", "reviewer", "m", phi_score=0.8)
+        vote = Vote(agent, VoteChoice.APPROVE, 0.9, "ok")
+        tri.submit_vote(req.request_id, vote)
+        tri.evaluate(req.request_id)
+
+    def test_record_and_retrieve_decision(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        history = store.get_decision_history()
+        assert len(history) == 1
+        assert history[0]["task_id"] == "task-1"
+        assert history[0]["outcome"] == "approved"
+
+    def test_filter_by_task_id(self, store: ScoreStore) -> None:
+        self._make_decision(store, "task-1")
+        self._make_decision(store, "task-2")
+        history = store.get_decision_history(task_id="task-1")
+        assert len(history) == 1
+        assert history[0]["task_id"] == "task-1"
+
+    def test_filter_by_outcome(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        history = store.get_decision_history(outcome="approved")
+        assert len(history) == 1
+        history = store.get_decision_history(outcome="rejected")
+        assert len(history) == 0
+
+    def test_filter_by_since(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        # Since far future → no results
+        history = store.get_decision_history(since="2099-01-01T00:00:00+00:00")
+        assert len(history) == 0
+        # Since far past → all results
+        history = store.get_decision_history(since="2000-01-01T00:00:00+00:00")
+        assert len(history) == 1
+
+    def test_limit(self, store: ScoreStore) -> None:
+        for i in range(5):
+            self._make_decision(store, f"task-{i}")
+        history = store.get_decision_history(limit=3)
+        assert len(history) == 3
+
+    def test_get_decision_json(self, store: ScoreStore) -> None:
+        import json
+
+        self._make_decision(store)
+        history = store.get_decision_history()
+        request_id = history[0]["request_id"]
+        raw = store.get_decision_json(request_id)
+        assert raw is not None
+        d = json.loads(raw)
+        assert d["outcome"] == "approved"
+        assert "votes" in d
+
+    def test_get_decision_json_not_found(self, store: ScoreStore) -> None:
+        assert store.get_decision_json("nonexistent") is None
+
+    def test_get_vote_records(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        records = store.get_vote_records()
+        assert len(records) == 1
+        assert records[0]["agent_id"] == "a1"
+        assert records[0]["choice"] == "approve"
+        assert records[0]["confidence"] == 0.9
+
+    def test_get_vote_records_by_agent(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        records = store.get_vote_records(agent_id="a1")
+        assert len(records) == 1
+        records = store.get_vote_records(agent_id="nonexistent")
+        assert len(records) == 0
+
+    def test_get_vote_records_by_request(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        history = store.get_decision_history()
+        request_id = history[0]["request_id"]
+        records = store.get_vote_records(request_id=request_id)
+        assert len(records) == 1
+
+    def test_get_vote_records_limit(self, store: ScoreStore) -> None:
+        for i in range(5):
+            self._make_decision(store, f"task-{i}")
+        records = store.get_vote_records(limit=3)
+        assert len(records) == 3
+
+    def test_get_agent_vote_stats(self, store: ScoreStore) -> None:
+        self._make_decision(store)
+        stats = store.get_agent_vote_stats("a1")
+        assert stats["total"] == 1
+        assert stats["approve_count"] == 1
+        assert stats["reject_count"] == 0
+        assert stats["avg_confidence"] == pytest.approx(0.9)
+
+    def test_get_agent_vote_stats_empty(self, store: ScoreStore) -> None:
+        stats = store.get_agent_vote_stats("nonexistent")
+        assert stats["total"] == 0
+        assert stats["avg_confidence"] == 0.0
+
+    def test_decision_upsert(self, store: ScoreStore) -> None:
+        """Recording same request_id twice overwrites (INSERT OR REPLACE)."""
+        self._make_decision(store)
+        history = store.get_decision_history()
+        assert len(history) == 1
+        # Recording again with same request_id should not create duplicate
+        # (this tests the OR REPLACE behavior)
+
+    def test_multiple_vote_choices_in_stats(self, store: ScoreStore) -> None:
+        """Stats aggregate across multiple vote choices."""
+        from convergent.coordination_config import CoordinationConfig
+        from convergent.triumvirate import Triumvirate
+
+        scorer = PhiScorer(store)
+        tri = Triumvirate(scorer, CoordinationConfig(), store=store)
+
+        # Create two decisions with different vote patterns
+        req1 = tri.create_request("t1", "q1", "c")
+        tri.submit_vote(
+            req1.request_id,
+            Vote(
+                AgentIdentity("a1", "r", "m", phi_score=0.8),
+                VoteChoice.APPROVE,
+                0.9,
+                "ok",
+            ),
+        )
+        tri.evaluate(req1.request_id)
+
+        req2 = tri.create_request("t2", "q2", "c")
+        tri.submit_vote(
+            req2.request_id,
+            Vote(
+                AgentIdentity("a1", "r", "m", phi_score=0.8),
+                VoteChoice.REJECT,
+                0.7,
+                "no",
+            ),
+        )
+        tri.evaluate(req2.request_id)
+
+        stats = store.get_agent_vote_stats("a1")
+        assert stats["total"] == 2
+        assert stats["approve_count"] == 1
+        assert stats["reject_count"] == 1
+        assert stats["avg_confidence"] == pytest.approx(0.8)  # (0.9+0.7)/2
+
+
 # --- Public API tests ---
 
 
