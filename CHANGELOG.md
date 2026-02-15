@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-14
+
+### Added
+- **Pluggable signal bus architecture** — `SignalBackend` protocol with two implementations
+- `signal_backend.py` — `SignalBackend` protocol (runtime_checkable) + `FilesystemSignalBackend` extracted from original SignalBus
+- `sqlite_signal_backend.py` — `SQLiteSignalBackend` for cross-process coordination (WAL mode, consumer-based tracking, ACID guarantees, zero new dependencies)
+- **Decision history query API** — persisted consensus decisions and vote records
+- `ScoreStore.record_decision()` — persist full Decision + individual vote records
+- `ScoreStore.get_decision_history()` — query with task_id, outcome, since, limit filters
+- `ScoreStore.get_decision_json()` — retrieve full Decision JSON by request_id
+- `ScoreStore.get_vote_records()` — query individual vote records by agent or request
+- `ScoreStore.get_agent_vote_stats()` — aggregated voting statistics per agent
+- `GorgonBridge.get_decision_history()` / `get_agent_vote_stats()` — bridge delegation methods
+
+### Changed
+- `SignalBus` refactored to accept pluggable `backend` parameter (backward-compatible: `signals_dir` still works)
+- `SignalBus` gains `consumer_id`, `close()`, and `backend` property
+- `CoordinationConfig.signal_bus_type` default changed from `"filesystem"` to `"sqlite"`
+- `GorgonBridge` uses SQLiteSignalBackend by default (filesystem still available via config)
+- `Triumvirate` accepts optional `store` parameter for decision persistence (graceful degradation)
+- Version bumped to 0.6.0
+
+### Tests
+- 130+ new tests across 8 test files (800+ total, 99% coverage)
+
 ## [0.5.0] - 2026-02-14
 
 ### Added
@@ -105,7 +130,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Rust acceleration via `maturin develop --release`
 - GitHub Actions CI for Rust + Python matrix (3.10/3.11/3.12)
 
-[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/AreteDriver/convergent/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/AreteDriver/convergent/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AreteDriver/convergent/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AreteDriver/convergent/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AreteDriver/convergent/compare/v0.2.0...v0.3.0

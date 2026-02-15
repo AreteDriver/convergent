@@ -5,8 +5,8 @@ Coordination library for multi-agent AI systems. Agents share an intent graph, d
 [![CI](https://github.com/AreteDriver/convergent/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/convergent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-670+-brightgreen.svg)]()
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-800+-brightgreen.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)]()
 
 ## Why This Exists
 
@@ -176,9 +176,10 @@ ruff check python/ tests/ && ruff format --check python/ tests/
 
 ## Roadmap
 
-- **v0.5.0** (current): Intent graph, 3-layer stack, coordination protocol (triumvirate, stigmergy, flocking)
-- **v0.6.0** (next): Distributed signal bus (Redis/NATS), cross-process coordination
-- **v1.0.0**: Stable API contract, published to PyPI, documentation site
+- **v0.6.0** (current): Pluggable signal bus (SQLite cross-process + filesystem), decision history query API
+- **v0.5.0**: Coordination protocol (triumvirate voting, stigmergy, flocking, signal bus)
+- **v0.4.0**: CLI inspector, async backend, Rust backend parity
+- **v1.0.0** (next): Stable API contract, published to PyPI, documentation site
 
 ## License
 

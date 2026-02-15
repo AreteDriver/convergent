@@ -18,7 +18,7 @@ This is an open-source companion to [Gorgon](https://github.com/AreteDriver/Gorg
 - **Rust (optional)** — PyO3 bindings for performance-critical graph operations
 - **SQLite** — persistence for intent graph, scores, stigmergy markers, vote history
 - **No frameworks** — this is a library, not an application
-- **pytest** — testing (670+ tests, 97% coverage)
+- **pytest** — testing (800+ tests, 99% coverage)
 
 ## Architecture
 
@@ -97,7 +97,9 @@ convergent/
 │   ├── scoring.py             ← PhiScorer, phi-weighted trust scores (Bayesian + decay)
 │   ├── score_store.py         ← SQLite persistence for scores, votes, decisions
 │   ├── triumvirate.py         ← Voting engine (ANY/MAJORITY/UNANIMOUS/UNANIMOUS_HUMAN)
-│   ├── signal_bus.py          ← Filesystem-backed pub/sub for agent events
+│   ├── signal_backend.py      ← SignalBackend protocol + FilesystemSignalBackend
+│   ├── signal_bus.py          ← Pluggable pub/sub with backend injection
+│   ├── sqlite_signal_backend.py ← SQLite signal backend (cross-process, WAL)
 │   ├── stigmergy.py           ← Trail markers with evaporation/reinforcement (own SQLite)
 │   ├── flocking.py            ← Swarm coordination (alignment/cohesion/separation)
 │   └── gorgon_bridge.py       ← Single entry point for Gorgon integration
@@ -128,7 +130,9 @@ convergent/
 │   ├── test_protocol.py       ← Protocol data models + JSON round-trips
 │   ├── test_scoring.py        ← Phi scoring + score store persistence
 │   ├── test_triumvirate.py    ← Voting engine + quorum rules
-│   ├── test_signal_bus.py     ← Pub/sub + polling + expiry
+│   ├── test_signal_backend.py  ← SignalBackend protocol + FilesystemSignalBackend
+│   ├── test_signal_bus.py     ← Pub/sub + polling + multi-consumer + SQLite backend
+│   ├── test_sqlite_signal_backend.py ← SQLite signal backend tests
 │   ├── test_stigmergy.py      ← Markers + evaporation + context
 │   ├── test_flocking.py       ← Alignment/cohesion/separation
 │   └── test_gorgon_bridge.py  ← Bridge lifecycle + enrichment
@@ -161,10 +165,10 @@ Same as Gorgon:
 - **SQLite pattern:** See `sqlite_backend.py` and `score_store.py` for the established patterns (WAL mode, `check_same_thread=False`). New persistence code should follow the same conventions.
 - **Stigmergy has its own SQLite DB** — separate from score_store for composability. GorgonBridge uses `Path(db_path).with_suffix(".stigmergy.db")`.
 
-## Current State (v0.5.0)
+## Current State (v0.6.0)
 
 ### Phase 1-2: Intent Graph + Intelligence (Complete)
-- **29 production modules**, 670+ tests, 97% coverage
+- **33 production modules**, 800+ tests, 99% coverage
 - **Intent graph** — Core data model: Intent, InterfaceSpec, Constraint, Evidence
 - **Contract system** — Validation, conflict detection, mutation tracking
 - **Three-layer stack** — Constraints → Intent Graph → Economics
@@ -179,11 +183,12 @@ Same as Gorgon:
 - **Protocol data models** — AgentIdentity, Vote, ConsensusRequest, Decision, Signal, StigmergyMarker (frozen dataclasses, JSON round-trips)
 - **CoordinationConfig** — Centralized config for Phase 3 settings
 - **Phi-weighted scoring** — Bayesian smoothing with exponential decay, per-agent per-domain trust scores, bounded [0.1, 0.95], SQLite persistence
-- **Triumvirate voting** — ANY/MAJORITY/UNANIMOUS/UNANIMOUS_HUMAN quorum, phi-weighted votes, tie-breaking, escalation, timeout handling
-- **Signal bus** — Filesystem-backed pub/sub, polling thread, targeted/broadcast delivery, expiry cleanup
+- **Triumvirate voting** — ANY/MAJORITY/UNANIMOUS/UNANIMOUS_HUMAN quorum, phi-weighted votes, tie-breaking, escalation, timeout handling, decision persistence
+- **Signal bus** — Pluggable backend architecture with FilesystemSignalBackend and SQLiteSignalBackend, polling thread, targeted/broadcast delivery, multi-consumer support, expiry cleanup
+- **Decision history** — Persisted decisions and vote records with query API (filter by task, outcome, agent; aggregated vote statistics)
 - **Stigmergy** — Trail markers with exponential evaporation, reinforcement, context generation, own SQLite DB
 - **Flocking** — Alignment (pattern sharing), cohesion (Jaccard keyword drift detection), separation (file conflict avoidance)
-- **GorgonBridge** — Single entry point for Gorgon: prompt enrichment, consensus voting, outcome recording, marker management
+- **GorgonBridge** — Single entry point for Gorgon: prompt enrichment, consensus voting, outcome recording, marker management, decision history queries
 
 ### Gorgon Integration
 - `create_delegation_checker()` — Intent graph delegation (Phase 1-2)
