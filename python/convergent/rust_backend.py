@@ -95,7 +95,7 @@ def _rust_dict_to_intent(d: dict) -> Intent:
 
 def _intent_to_rust_dict(intent: Intent) -> dict:
     """Convert an Intent to the dict format expected by Rust PyIntentGraph."""
-    return {
+    d = {
         "id": intent.id,
         "agent_id": intent.agent_id,
         "intent": intent.intent,
@@ -107,8 +107,10 @@ def _intent_to_rust_dict(intent: Intent) -> dict:
         ],
         "stability": intent.stability,
         "evidence": [{"kind": e.kind.value, "description": e.description} for e in intent.evidence],
-        "parent_id": intent.parent_id,
     }
+    if intent.parent_id is not None:
+        d["parent_id"] = intent.parent_id
+    return d
 
 
 class RustGraphBackend:

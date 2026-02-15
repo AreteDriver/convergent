@@ -228,7 +228,9 @@ fn dict_to_intent(dict: &Bound<'_, PyDict>) -> PyResult<IntentNode> {
     }
 
     if let Some(parent_id) = dict.get_item("parent_id")? {
-        intent.parent_id = Some(parent_id.extract()?);
+        if !parent_id.is_none() {
+            intent.parent_id = Some(parent_id.extract()?);
+        }
     }
 
     Ok(intent)
