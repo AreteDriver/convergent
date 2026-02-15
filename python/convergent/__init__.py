@@ -104,6 +104,7 @@ from convergent.semantic import (
 )
 from convergent.signal_backend import FilesystemSignalBackend, SignalBackend
 from convergent.signal_bus import SignalBus
+from convergent.sqlite_signal_backend import SQLiteSignalBackend
 from convergent.sqlite_backend import SQLiteBackend
 from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
@@ -223,6 +224,7 @@ __all__ = [
     "FilesystemSignalBackend",
     "SignalBackend",
     "SignalBus",
+    "SQLiteSignalBackend",
     # Phase 3: Stigmergy
     "StigmergyField",
     # Phase 3: Flocking
