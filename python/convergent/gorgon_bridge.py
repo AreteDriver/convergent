@@ -26,6 +26,7 @@ from convergent.protocol import (
 from convergent.score_store import ScoreStore
 from convergent.scoring import PhiScorer
 from convergent.signal_bus import SignalBus
+from convergent.sqlite_signal_backend import SQLiteSignalBackend
 from convergent.stigmergy import StigmergyField
 from convergent.triumvirate import Triumvirate
 
@@ -37,6 +38,11 @@ class GorgonBridge:
 
     Initializes all Phase 3 subsystems from a CoordinationConfig and exposes
     a clean API for Gorgon's pipeline to call with minimal changes.
+
+    Signal bus backend selection:
+    - ``db_path == ":memory:"`` → no signal bus (no filesystem/persistence)
+    - ``signal_bus_type == "sqlite"`` → SQLiteSignalBackend (.signals.db)
+    - ``signal_bus_type == "filesystem"`` → FilesystemSignalBackend
 
     Args:
         config: Coordination configuration. Uses defaults if not provided.
@@ -64,12 +70,16 @@ class GorgonBridge:
         # Flocking
         self._flocking = FlockingCoordinator(self._stigmergy)
 
-        # Signal bus
-        signals_dir = Path(self._config.db_path).parent / "signals"
-        if self._config.db_path == ":memory:":
-            self._signal_bus: SignalBus | None = None
-        else:
-            self._signal_bus = SignalBus(signals_dir)
+        # Signal bus — smart backend selection
+        self._signal_bus: SignalBus | None = None
+        if self._config.db_path != ":memory:":
+            if self._config.signal_bus_type == "sqlite":
+                signal_db = str(Path(self._config.db_path).with_suffix(".signals.db"))
+                backend = SQLiteSignalBackend(signal_db)
+                self._signal_bus = SignalBus(backend=backend)
+            else:
+                signals_dir = Path(self._config.db_path).parent / "signals"
+                self._signal_bus = SignalBus(signals_dir=signals_dir)
 
     def enrich_prompt(
         self,
@@ -247,7 +257,7 @@ class GorgonBridge:
                 Signal(
                     signal_type="task_outcome",
                     source_agent=agent_id,
-                    payload=f'{{"skill_domain":"{skill_domain}","outcome":"{outcome}"}}',
+                    payload=(f'{{"skill_domain":"{skill_domain}","outcome":"{outcome}"}}'),
                 )
             )
 
@@ -334,6 +344,8 @@ class GorgonBridge:
         return self._signal_bus
 
     def close(self) -> None:
-        """Close all database connections."""
+        """Close all database connections and stop signal bus."""
         self._store.close()
         self._stigmergy.close()
+        if self._signal_bus is not None:
+            self._signal_bus.close()

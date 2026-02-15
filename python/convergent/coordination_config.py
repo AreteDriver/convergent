@@ -24,7 +24,8 @@ class CoordinationConfig:
             Higher values = faster decay. Default 0.05.
         stigmergy_evaporation_rate: How fast marker strength decays per day.
             Higher values = faster evaporation. Default 0.1.
-        signal_bus_type: Backend for the signal bus ("filesystem" or "redis").
+        signal_bus_type: Backend for the signal bus
+            ("sqlite", "filesystem"). Default "sqlite" for cross-process.
         vote_timeout_seconds: How long to wait for votes before DEADLOCK.
     """
 
@@ -32,7 +33,7 @@ class CoordinationConfig:
     default_quorum: QuorumLevel = QuorumLevel.MAJORITY
     phi_decay_rate: float = 0.05
     stigmergy_evaporation_rate: float = 0.1
-    signal_bus_type: str = "filesystem"
+    signal_bus_type: str = "sqlite"
     vote_timeout_seconds: int = 300
 
     def to_json(self) -> str:

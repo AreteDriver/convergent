@@ -408,7 +408,7 @@ class TestCoordinationConfig:
         assert config.default_quorum is QuorumLevel.MAJORITY
         assert config.phi_decay_rate == 0.05
         assert config.stigmergy_evaporation_rate == 0.1
-        assert config.signal_bus_type == "filesystem"
+        assert config.signal_bus_type == "sqlite"
         assert config.vote_timeout_seconds == 300
 
     def test_custom_values(self) -> None:

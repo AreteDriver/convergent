@@ -234,6 +234,74 @@ class TestFilePersistence:
         b2.close()
 
 
+class TestSignalBusBackendSelection:
+    def test_default_uses_sqlite_backend(self, tmp_path: object) -> None:
+        import pathlib
+
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path)
+        bridge = GorgonBridge(config)
+        assert bridge.signal_bus is not None
+        assert isinstance(bridge.signal_bus.backend, SQLiteSignalBackend)
+        bridge.close()
+
+    def test_explicit_filesystem_backend(self, tmp_path: object) -> None:
+        import pathlib
+
+        from convergent.signal_backend import FilesystemSignalBackend
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path, signal_bus_type="filesystem")
+        bridge = GorgonBridge(config)
+        assert bridge.signal_bus is not None
+        assert isinstance(bridge.signal_bus.backend, FilesystemSignalBackend)
+        bridge.close()
+
+    def test_memory_has_no_signal_bus(self) -> None:
+        config = CoordinationConfig(db_path=":memory:")
+        bridge = GorgonBridge(config)
+        assert bridge.signal_bus is None
+
+    def test_sqlite_signal_bus_stores_signals(self, tmp_path: object) -> None:
+        import pathlib
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path)
+        bridge = GorgonBridge(config)
+        bridge.record_task_outcome("agent-1", "review", "approved")
+        signals = bridge.signal_bus.get_signals()
+        assert len(signals) == 1
+        assert signals[0].signal_type == "task_outcome"
+        bridge.close()
+
+    def test_close_stops_signal_bus(self, tmp_path: object) -> None:
+        import pathlib
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path)
+        bridge = GorgonBridge(config)
+        bridge.signal_bus.start_polling()
+        assert bridge.signal_bus.is_polling
+        bridge.close()
+        assert not bridge.signal_bus.is_polling
+
+    def test_sqlite_signal_db_path(self, tmp_path: object) -> None:
+        import pathlib
+
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path)
+        bridge = GorgonBridge(config)
+        backend = bridge.signal_bus.backend
+        assert isinstance(backend, SQLiteSignalBackend)
+        expected = str(pathlib.Path(db_path).with_suffix(".signals.db"))
+        assert backend.db_path == expected
+        bridge.close()
+
+
 class TestClose:
     def test_close_does_not_raise(self, bridge: GorgonBridge) -> None:
         bridge.close()  # Should not raise
