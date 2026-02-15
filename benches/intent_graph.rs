@@ -81,9 +81,18 @@ fn bench_resolve(c: &mut Criterion) {
             graph.publish(&intent).unwrap();
         }
 
-        let new_intent = make_intent("agent_new", "new_service", vec!["provide_0"], vec!["require_99"]);
+        let new_intent = make_intent(
+            "agent_new",
+            "new_service",
+            vec!["provide_0"],
+            vec!["require_99"],
+        );
 
-        b.iter(|| graph.resolve(black_box(&new_intent), black_box(0.0)).unwrap());
+        b.iter(|| {
+            graph
+                .resolve(black_box(&new_intent), black_box(0.0))
+                .unwrap()
+        });
     });
 }
 
@@ -100,8 +109,11 @@ fn bench_find_overlapping(c: &mut Criterion) {
             graph.publish(&intent).unwrap();
         }
 
-        let specs = vec![InterfaceSpec::new("provide_0", InterfaceKind::Function, "(x: str) -> str")
-            .with_tags(vec!["api", "benchmark"])];
+        let specs =
+            vec![
+                InterfaceSpec::new("provide_0", InterfaceKind::Function, "(x: str) -> str")
+                    .with_tags(vec!["api", "benchmark"]),
+            ];
 
         b.iter(|| {
             graph
