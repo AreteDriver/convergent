@@ -327,6 +327,161 @@ class TestSubscriberErrors:
         assert len(received) == 1
 
 
+class TestSignalBusWithSQLiteBackend:
+    """Test SignalBus wired to SQLiteSignalBackend."""
+
+    def test_publish_and_poll(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend)
+        received: list[Signal] = []
+        bus.subscribe("task_complete", received.append)
+        bus.publish(_signal())
+        signals = bus.poll_once()
+        assert len(signals) == 1
+        assert len(received) == 1
+        backend.close()
+
+    def test_poll_idempotent(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend)
+        received: list[Signal] = []
+        bus.subscribe("task_complete", received.append)
+        bus.publish(_signal())
+        bus.poll_once()
+        bus.poll_once()
+        assert len(received) == 1
+        backend.close()
+
+    def test_get_signals_delegates(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend)
+        bus.publish(_signal(signal_type="blocked"))
+        bus.publish(_signal(signal_type="task_complete"))
+        signals = bus.get_signals(signal_type="blocked")
+        assert len(signals) == 1
+        backend.close()
+
+    def test_cleanup_delegates(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend)
+        old_ts = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+        bus.publish(Signal(signal_type="old", source_agent="a", timestamp=old_ts))
+        bus.publish(_signal())
+        deleted = bus.cleanup_expired(max_age_seconds=3600)
+        assert deleted == 1
+        backend.close()
+
+    def test_clear_delegates(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend)
+        bus.publish(_signal())
+        deleted = bus.clear()
+        assert deleted == 1
+        assert bus.get_signals() == []
+        backend.close()
+
+    def test_close_stops_polling_and_closes_backend(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend, poll_interval=0.05)
+        bus.start_polling()
+        bus.close()
+        assert not bus.is_polling
+
+
+class TestMultiConsumer:
+    """Test two SignalBus instances with different consumer_ids on same backend."""
+
+    def test_independent_consumption(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus_a = SignalBus(backend=backend, consumer_id="consumer-a")
+        bus_b = SignalBus(backend=backend, consumer_id="consumer-b")
+
+        received_a: list[Signal] = []
+        received_b: list[Signal] = []
+        bus_a.subscribe("task_complete", received_a.append)
+        bus_b.subscribe("task_complete", received_b.append)
+
+        bus_a.publish(_signal())
+
+        signals_a = bus_a.poll_once()
+        signals_b = bus_b.poll_once()
+
+        assert len(signals_a) == 1
+        assert len(signals_b) == 1
+        assert len(received_a) == 1
+        assert len(received_b) == 1
+        backend.close()
+
+    def test_one_consumer_processes_other_still_sees(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus_a = SignalBus(backend=backend, consumer_id="consumer-a")
+        bus_b = SignalBus(backend=backend, consumer_id="consumer-b")
+
+        bus_a.publish(_signal())
+        # consumer-a processes
+        bus_a.poll_once()
+        # consumer-a sees nothing new
+        assert len(bus_a.poll_once()) == 0
+        # consumer-b still sees it
+        assert len(bus_b.poll_once()) == 1
+        backend.close()
+
+    def test_file_backed_multi_consumer(self, tmp_path: Path) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        db_path = str(tmp_path / "shared.db")
+        backend = SQLiteSignalBackend(db_path)
+        bus_a = SignalBus(backend=backend, consumer_id="a")
+        bus_b = SignalBus(backend=backend, consumer_id="b")
+
+        bus_a.publish(_signal(source="agent-1"))
+        bus_a.publish(_signal(source="agent-2"))
+
+        a_signals = bus_a.poll_once()
+        b_signals = bus_b.poll_once()
+        assert len(a_signals) == 2
+        assert len(b_signals) == 2
+
+        # Both now have empty queues
+        assert len(bus_a.poll_once()) == 0
+        assert len(bus_b.poll_once()) == 0
+        backend.close()
+
+    def test_targeted_signal_dispatch_with_sqlite(self) -> None:
+        from convergent.sqlite_signal_backend import SQLiteSignalBackend
+
+        backend = SQLiteSignalBackend(":memory:")
+        bus = SignalBus(backend=backend, consumer_id="c")
+
+        received_target: list[Signal] = []
+        received_other: list[Signal] = []
+        bus.subscribe("blocked", received_target.append, agent_id="agent-2")
+        bus.subscribe("blocked", received_other.append, agent_id="agent-3")
+
+        bus.publish(_signal(signal_type="blocked", target="agent-2"))
+        bus.poll_once()
+
+        assert len(received_target) == 1
+        assert len(received_other) == 0
+        backend.close()
+
+
 class TestPublicAPI:
     def test_import_from_convergent(self) -> None:
         import convergent
