@@ -371,6 +371,65 @@ class TestAgentCount:
         assert decision.outcome is DecisionOutcome.APPROVED
 
 
+# --- Tie-breaking edge cases ---
+
+
+class TestNaiveTimestamp:
+    def test_naive_requested_at_treated_as_utc(self, scorer: PhiScorer) -> None:
+        """ConsensusRequest with naive timestamp still evaluates correctly."""
+        from datetime import datetime
+
+        from convergent.protocol import ConsensusRequest
+
+        tri = Triumvirate(scorer, CoordinationConfig())
+        # Manually create a request with naive timestamp
+        naive_ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")  # noqa: DTZ005
+        req = ConsensusRequest(
+            request_id="r-naive",
+            task_id="t",
+            question="q",
+            context="c",
+            quorum=QuorumLevel.MAJORITY,
+            requested_at=naive_ts,
+        )
+        tri._requests["r-naive"] = req
+        tri._votes["r-naive"] = []
+        # No votes + naive timestamp → deadlock (but won't crash)
+        decision = tri.evaluate("r-naive")
+        assert decision.outcome is DecisionOutcome.DEADLOCK
+
+
+class TestTieBreaking:
+    def test_majority_tie_all_abstain_deadlocks(self, tri: Triumvirate) -> None:
+        """MAJORITY with only abstain votes → tie (0==0) → _break_tie → DEADLOCK."""
+        req = tri.create_request("t", "q", "c", quorum=QuorumLevel.MAJORITY)
+        tri.submit_vote(req.request_id, _vote(_agent("a1"), VoteChoice.ABSTAIN))
+        tri.submit_vote(req.request_id, _vote(_agent("a2"), VoteChoice.ABSTAIN))
+        decision = tri.evaluate(req.request_id)
+        assert decision.outcome is DecisionOutcome.DEADLOCK
+
+    def test_majority_tie_broken_by_reject(self, tri: Triumvirate) -> None:
+        """When tied totals, highest-weighted vote is a reject → REJECTED."""
+        req = tri.create_request("t", "q", "c", quorum=QuorumLevel.MAJORITY)
+        # Approve: 0.3*1.0 + 0.3*1.0 = 0.6
+        # Reject: 0.6*1.0 = 0.6
+        # Tie → highest individual = reject at 0.6
+        tri.submit_vote(
+            req.request_id,
+            _vote(_agent("a1", 0.3), VoteChoice.APPROVE, confidence=1.0),
+        )
+        tri.submit_vote(
+            req.request_id,
+            _vote(_agent("a2", 0.3), VoteChoice.APPROVE, confidence=1.0),
+        )
+        tri.submit_vote(
+            req.request_id,
+            _vote(_agent("a3", 0.6), VoteChoice.REJECT, confidence=1.0),
+        )
+        decision = tri.evaluate(req.request_id)
+        assert decision.outcome is DecisionOutcome.REJECTED
+
+
 # --- Decision persistence ---
 
 

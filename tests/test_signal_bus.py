@@ -482,6 +482,20 @@ class TestMultiConsumer:
         backend.close()
 
 
+class TestPollLoopExceptionHandling:
+    def test_poll_loop_survives_exception(self, tmp_path: Path) -> None:
+        """Exception in poll_once doesn't kill the polling thread."""
+        from unittest.mock import MagicMock
+
+        backend = MagicMock()
+        backend.get_unprocessed.side_effect = RuntimeError("transient")
+        bus = SignalBus(backend=backend, poll_interval=0.02)
+        bus.start_polling()
+        time.sleep(0.1)  # Let it poll a few times
+        assert bus.is_polling  # Still running despite exceptions
+        bus.stop_polling()
+
+
 class TestPublicAPI:
     def test_import_from_convergent(self) -> None:
         import convergent

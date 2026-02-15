@@ -232,6 +232,84 @@ class TestSignalBusWithExplicitBackend:
         assert not bus.is_polling
 
 
+class TestFilesystemEdgeCases:
+    """Edge case tests for coverage push."""
+
+    def test_mark_processed_without_prior_get(self, tmp_path: Path) -> None:
+        """mark_processed creates consumer set if get_unprocessed wasn't called first."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        backend.store_signal(_signal())
+        # Call mark_processed directly — consumer set doesn't exist yet
+        backend.mark_processed("new-consumer", ["some-file.json"])
+        # Now get_unprocessed should still return the signal (different ID)
+        unprocessed = backend.get_unprocessed("new-consumer")
+        assert len(unprocessed) == 1
+
+    def test_get_signals_naive_timestamp(self, tmp_path: Path) -> None:
+        """Signal with naive timestamp is treated as UTC in get_signals."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        # Create signal with naive timestamp (strip +00:00 from UTC)
+        utc_now = datetime.now(timezone.utc)
+        naive_ts = utc_now.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        sig = Signal(signal_type="test", source_agent="a1", timestamp=naive_ts)
+        backend.store_signal(sig)
+        cutoff = utc_now - timedelta(hours=1)
+        signals = backend.get_signals(since=cutoff)
+        assert len(signals) == 1
+
+    def test_cleanup_expired_naive_timestamp(self, tmp_path: Path) -> None:
+        """Signal with naive old timestamp gets cleaned up."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        old_utc = datetime.now(timezone.utc) - timedelta(hours=2)
+        old_ts = old_utc.strftime("%Y-%m-%dT%H:%M:%S.%f")  # naive
+        sig = Signal(signal_type="test", source_agent="a1", timestamp=old_ts)
+        backend.store_signal(sig)
+        deleted = backend.cleanup_expired(max_age_seconds=3600)
+        assert deleted == 1
+
+    def test_cleanup_expired_removes_from_processed(self, tmp_path: Path) -> None:
+        """Cleanup removes expired signal from consumer processed sets."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        old_ts = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+        sig = Signal(signal_type="test", source_agent="a1", timestamp=old_ts)
+        backend.store_signal(sig)
+        # Mark as processed by a consumer
+        unprocessed = backend.get_unprocessed("consumer-1")
+        assert len(unprocessed) == 1
+        backend.mark_processed("consumer-1", [unprocessed[0][0]])
+        # Cleanup should remove from processed set too
+        deleted = backend.cleanup_expired(max_age_seconds=3600)
+        assert deleted == 1
+
+    def test_cleanup_malformed_file_skipped(self, tmp_path: Path) -> None:
+        """Malformed JSON files don't break cleanup."""
+        signals_dir = tmp_path / "signals"
+        signals_dir.mkdir()
+        (signals_dir / "bad.json").write_text("not json", encoding="utf-8")
+        backend = FilesystemSignalBackend(signals_dir)
+        deleted = backend.cleanup_expired(max_age_seconds=0)
+        assert deleted == 0
+        # File should still exist
+        assert (signals_dir / "bad.json").exists()
+
+    def test_clear_with_unreadable_file(self, tmp_path: Path) -> None:
+        """OSError during clear is handled gracefully."""
+        import os
+
+        signals_dir = tmp_path / "signals"
+        signals_dir.mkdir()
+        # Create a file we can't delete (read-only directory)
+        (signals_dir / "test.json").write_text("{}", encoding="utf-8")
+        backend = FilesystemSignalBackend(signals_dir)
+        # Make directory read-only to cause OSError on unlink
+        os.chmod(signals_dir, 0o555)
+        try:
+            deleted = backend.clear()
+            assert deleted == 0  # Couldn't delete
+        finally:
+            os.chmod(signals_dir, 0o755)
+
+
 class TestPublicAPI:
     def test_import_signal_backend(self) -> None:
         import convergent
