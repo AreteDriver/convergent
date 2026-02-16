@@ -36,6 +36,14 @@ from convergent.contract import (
 
 # Phase 3: Coordination Protocol
 from convergent.coordination_config import CoordinationConfig
+from convergent.cross_platform import (
+    CrossPlatformHub,
+    PlatformCapability,
+    PlatformContext,
+    PlatformType,
+    StateSnapshot,
+    detect_platform,
+)
 from convergent.economics import (
     Budget,
     CoordinationCostReport,
@@ -107,6 +115,15 @@ from convergent.signal_bus import SignalBus
 from convergent.sqlite_backend import SQLiteBackend
 from convergent.sqlite_signal_backend import SQLiteSignalBackend
 from convergent.stigmergy import StigmergyField
+from convergent.training import (
+    StepStatus,
+    StepType,
+    TrainingLevel,
+    TrainingManager,
+    TrainingModule,
+    TrainingProgress,
+    TrainingStep,
+)
 from convergent.triumvirate import Triumvirate
 from convergent.versioning import GraphSnapshot, MergeResult, VersionedGraph
 from convergent.visualization import dot_graph, html_report, overlap_matrix, text_table
@@ -231,6 +248,21 @@ __all__ = [
     "FlockingCoordinator",
     # Phase 3: Gorgon Integration
     "GorgonBridge",
+    # Cross-Platform Integration
+    "CrossPlatformHub",
+    "PlatformCapability",
+    "PlatformContext",
+    "PlatformType",
+    "StateSnapshot",
+    "detect_platform",
+    # User Education and Training
+    "StepStatus",
+    "StepType",
+    "TrainingLevel",
+    "TrainingManager",
+    "TrainingModule",
+    "TrainingProgress",
+    "TrainingStep",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
