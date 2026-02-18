@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771445806739,
+  "lastUpdate": 1771446540173,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -454,6 +454,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007872157247968101",
             "extra": "mean: 1.1532599555821703 msec\nrounds: 833"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "6ed6ab21229e65e9a63e7ebe75da845257d7ff71",
+          "message": "chore: rename PyPI package to convergentAI\n\nThe name \"convergent\" was already taken on PyPI. Package installs as\n`pip install convergentAI` but import name remains `import convergent`.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:24:50-08:00",
+          "tree_id": "f0211cb25e82c620befd291de068828103d69bbe",
+          "url": "https://github.com/AreteDriver/convergent/commit/6ed6ab21229e65e9a63e7ebe75da845257d7ff71"
+        },
+        "date": 1771446539116,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 686.3318744716147,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000023198915834386603",
+            "extra": "mean: 1.4570210669144115 msec\nrounds: 538"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 283.1169468254031,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000030441612659551457",
+            "extra": "mean: 3.5321092969284367 msec\nrounds: 293"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 184966.56172930263,
+            "unit": "iter/sec",
+            "range": "stddev: 9.649372192317212e-7",
+            "extra": "mean: 5.40638259505247 usec\nrounds: 55513"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86266.93311204808,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010153199642717193",
+            "extra": "mean: 11.591927102603112 usec\nrounds: 44981"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 198.0500120140362,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006303551188893797",
+            "extra": "mean: 5.049229686131643 msec\nrounds: 137"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 761.8028845818483,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008858255023475879",
+            "extra": "mean: 1.3126755230769407 msec\nrounds: 715"
           }
         ]
       }
