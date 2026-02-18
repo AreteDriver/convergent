@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771447233434,
+  "lastUpdate": 1771454197835,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -586,6 +586,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0008342045263569248",
             "extra": "mean: 1.1486674683100486 msec\nrounds: 852"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "ee20372eeabc715ee522c568da50085279106379",
+          "message": "chore: bump version to 1.1.0 for Phase 4 release\n\nPhase 4 modules (health dashboard, cycle detection, event log) were\nadded after v1.0.0 PyPI release. This version includes all Phase 4\nexports needed by Gorgon.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T14:32:49-08:00",
+          "tree_id": "bf8a37c245a7416957ca0d81f5bdc864263a4e92",
+          "url": "https://github.com/AreteDriver/convergent/commit/ee20372eeabc715ee522c568da50085279106379"
+        },
+        "date": 1771454197536,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 678.0886466430062,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00015305800054439124",
+            "extra": "mean: 1.4747334363297055 msec\nrounds: 534"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 290.2268219085776,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008352935778060222",
+            "extra": "mean: 3.4455809198606846 msec\nrounds: 287"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 182060.85014130766,
+            "unit": "iter/sec",
+            "range": "stddev: 7.516129784403301e-7",
+            "extra": "mean: 5.492669067643284 usec\nrounds: 54422"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 80425.5885303748,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000002861123781370302",
+            "extra": "mean: 12.43385368106227 usec\nrounds: 37924"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 200.13510414522335,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005732604578794336",
+            "extra": "mean: 4.996624676470418 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 742.2405811778331,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008152645280544588",
+            "extra": "mean: 1.3472720642855964 msec\nrounds: 700"
           }
         ]
       }
