@@ -3,6 +3,10 @@
 Run: PYTHONPATH=python pytest tests/test_benchmarks.py --benchmark-only
 """
 
+import pytest
+
+pytest.importorskip("pytest_benchmark")
+
 from convergent import (
     Intent,
     IntentResolver,

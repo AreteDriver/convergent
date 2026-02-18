@@ -254,10 +254,11 @@ class TestPhiScorer:
         assert score2 >= score1
 
     def test_apply_vote_weight(self, scorer: PhiScorer) -> None:
+        # No outcomes recorded → scorer uses prior (0.5), not self-reported 0.8
         agent = AgentIdentity("agent-1", "reviewer", "claude:sonnet", phi_score=0.8)
         vote = Vote(agent, VoteChoice.APPROVE, confidence=0.9, reasoning="lgtm")
         weighted = scorer.apply_vote_weight(vote)
-        assert weighted.weighted_score == pytest.approx(0.72)  # 0.8 * 0.9
+        assert weighted.weighted_score == pytest.approx(0.45)  # 0.5 (prior) * 0.9
         # Original vote unchanged (frozen)
         assert vote.weighted_score == 0.0
 
@@ -275,7 +276,23 @@ class TestPhiScorer:
         assert weighted.choice is VoteChoice.REJECT
         assert weighted.confidence == 0.7
         assert weighted.reasoning == "bugs found"
-        assert weighted.weighted_score == pytest.approx(0.42)  # 0.6 * 0.7
+        # Uses stored prior (0.5), not self-reported 0.6
+        assert weighted.weighted_score == pytest.approx(0.35)  # 0.5 * 0.7
+
+    def test_apply_vote_weight_uses_stored_score(self, scorer: PhiScorer) -> None:
+        """Vote weight comes from the store, not the agent's self-reported phi_score."""
+        # Build up a high stored score via approvals
+        for _ in range(20):
+            scorer.record_outcome("agent-1", "reviewer", "approved")
+        stored = scorer.get_score("agent-1", "reviewer")
+        assert stored > 0.8
+
+        # Agent self-reports a low phi_score — should be ignored
+        agent = AgentIdentity("agent-1", "reviewer", "m", phi_score=0.1)
+        vote = Vote(agent, VoteChoice.APPROVE, confidence=1.0, reasoning="ok")
+        weighted = scorer.apply_vote_weight(vote)
+        # Weight should use the high stored score, not 0.1
+        assert weighted.weighted_score == pytest.approx(stored, abs=0.01)
 
     def test_custom_scorer_params(self) -> None:
         store = ScoreStore(":memory:")

@@ -339,6 +339,25 @@ class TestDecisionHistoryViabridge:
         assert stats["total"] == 0
 
 
+class TestPayloadSafety:
+    def test_outcome_payload_is_valid_json(self, tmp_path: object) -> None:
+        """Signal payload must be valid JSON even with special characters."""
+        import json
+        import pathlib
+
+        db_path = str(pathlib.Path(str(tmp_path)) / "coord.db")
+        config = CoordinationConfig(db_path=db_path)
+        bridge = GorgonBridge(config)
+        # Use skill_domain with characters that would break f-string JSON
+        bridge.record_task_outcome("agent-1", 'code "review"', "approved")
+        signals = bridge.signal_bus.get_signals()
+        assert len(signals) == 1
+        payload = json.loads(signals[0].payload)
+        assert payload["skill_domain"] == 'code "review"'
+        assert payload["outcome"] == "approved"
+        bridge.close()
+
+
 class TestClose:
     def test_close_does_not_raise(self, bridge: GorgonBridge) -> None:
         bridge.close()  # Should not raise
@@ -361,3 +380,10 @@ class TestPublicAPI:
         import convergent
 
         assert "GorgonBridge" in convergent.__all__
+
+    def test_resolution_types_exported(self) -> None:
+        import convergent
+
+        assert "Adjustment" in convergent.__all__
+        assert "ConflictReport" in convergent.__all__
+        assert "ResolutionResult" in convergent.__all__

@@ -145,13 +145,18 @@ class PhiScorer:
 
         weighted_score = phi_score * confidence
 
+        The phi score is looked up from the store using the agent's ID and
+        role, NOT taken from the self-reported ``vote.agent.phi_score``.
+        This prevents agents from inflating their own vote weight.
+
         Args:
             vote: The vote to weight.
 
         Returns:
             New Vote instance with weighted_score calculated.
         """
-        weighted = vote.agent.phi_score * vote.confidence
+        server_phi = self.get_score(vote.agent.agent_id, vote.agent.role)
+        weighted = server_phi * vote.confidence
         return replace(vote, weighted_score=weighted)
 
     def _recalculate(self, agent_id: str, skill_domain: str) -> float:

@@ -296,6 +296,9 @@ class TestFilesystemEdgeCases:
         """OSError during clear is handled gracefully."""
         import os
 
+        if os.getuid() == 0:
+            pytest.skip("Root bypasses filesystem permission checks")
+
         signals_dir = tmp_path / "signals"
         signals_dir.mkdir()
         # Create a file we can't delete (read-only directory)
@@ -308,6 +311,43 @@ class TestFilesystemEdgeCases:
             assert deleted == 0  # Couldn't delete
         finally:
             os.chmod(signals_dir, 0o755)
+
+
+class TestPathTraversalPrevention:
+    def test_slash_in_signal_type_sanitized(self, tmp_path: Path) -> None:
+        """signal_type with path separators must not escape signals directory."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        sig = Signal(signal_type="../../etc/malicious", source_agent="agent-1")
+        backend.store_signal(sig)
+        # File should be inside signals_dir, not escaped
+        files = list((tmp_path / "signals").glob("*.json"))
+        assert len(files) == 1
+        assert files[0].parent == tmp_path / "signals"
+
+    def test_slash_in_source_agent_sanitized(self, tmp_path: Path) -> None:
+        """source_agent with path separators must not escape signals directory."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        sig = Signal(signal_type="test", source_agent="../../../tmp/evil")
+        backend.store_signal(sig)
+        files = list((tmp_path / "signals").glob("*.json"))
+        assert len(files) == 1
+        assert files[0].parent == tmp_path / "signals"
+
+    def test_dot_segments_sanitized(self, tmp_path: Path) -> None:
+        """Dots in signal fields are sanitized to prevent traversal."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        sig = Signal(signal_type="...", source_agent="a..b")
+        backend.store_signal(sig)
+        files = list((tmp_path / "signals").glob("*.json"))
+        assert len(files) == 1
+
+    def test_null_byte_sanitized(self, tmp_path: Path) -> None:
+        """Null bytes in signal fields are sanitized."""
+        backend = FilesystemSignalBackend(tmp_path / "signals")
+        sig = Signal(signal_type="test\x00evil", source_agent="agent-1")
+        backend.store_signal(sig)
+        files = list((tmp_path / "signals").glob("*.json"))
+        assert len(files) == 1
 
 
 class TestPublicAPI:

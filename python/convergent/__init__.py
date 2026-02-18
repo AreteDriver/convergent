@@ -64,6 +64,8 @@ from convergent.governor import (
     VerdictKind,
 )
 from convergent.intent import (
+    Adjustment,
+    ConflictReport,
     Constraint,
     ConstraintSeverity,
     Evidence,
@@ -71,6 +73,7 @@ from convergent.intent import (
     Intent,
     InterfaceKind,
     InterfaceSpec,
+    ResolutionResult,
 )
 from convergent.matching import (
     names_overlap,
@@ -147,6 +150,8 @@ __all__ = [
     "content_hash_intents",
     "validate_publish",
     # Core types
+    "Adjustment",
+    "ConflictReport",
     "Constraint",
     "ConstraintApplicability",
     "ConstraintSeverity",
@@ -156,6 +161,7 @@ __all__ = [
     "IntentResolver",
     "InterfaceKind",
     "InterfaceSpec",
+    "ResolutionResult",
     # Backends
     "AsyncBackendWrapper",
     "AsyncGraphBackend",
