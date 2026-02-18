@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771446540173,
+  "lastUpdate": 1771447233434,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -520,6 +520,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0008858255023475879",
             "extra": "mean: 1.3126755230769407 msec\nrounds: 715"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "efb695ed60586fd6a0002e77908669f78f31710b",
+          "message": "feat: add health dashboard, cycle detection, and event log\n\nThree new observability modules for Phase 4:\n\n1. health.py — CoordinationHealth aggregates metrics from all subsystems\n   (intent graph, stigmergy, phi scores, voting). HealthChecker with\n   configurable grading (A-F). CLI: `convergent health <db_path>`\n\n2. cycles.py — DependencyGraph from provides/requires edges with\n   DFS-based cycle detection and Kahn's topological sort for safe\n   execution ordering. CLI: `convergent cycles <db_path>`\n\n3. event_log.py — Append-only SQLite event log for all coordination\n   events. 10 event types, correlation IDs for tracing, timeline\n   renderer. CLI: `convergent events <db_path>`\n\n60 new tests, all 887 tests passing.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:36:52-08:00",
+          "tree_id": "f4b1180ad817df1175625ba55860381f4ebd601f",
+          "url": "https://github.com/AreteDriver/convergent/commit/efb695ed60586fd6a0002e77908669f78f31710b"
+        },
+        "date": 1771447232595,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 717.5380464992984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005946551765636279",
+            "extra": "mean: 1.3936543224136588 msec\nrounds: 580"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 284.4959228054823,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00031833139063418053",
+            "extra": "mean: 3.514988862190927 msec\nrounds: 283"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 204446.49553877857,
+            "unit": "iter/sec",
+            "range": "stddev: 4.900252125945747e-7",
+            "extra": "mean: 4.891255276177253 usec\nrounds: 66904"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 106910.65493178295,
+            "unit": "iter/sec",
+            "range": "stddev: 7.949305254265662e-7",
+            "extra": "mean: 9.35360465837643 usec\nrounds: 51563"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 218.3674080337407,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000035408427040012344",
+            "extra": "mean: 4.579437971098171 msec\nrounds: 173"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 870.5739716571129,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008342045263569248",
+            "extra": "mean: 1.1486674683100486 msec\nrounds: 852"
           }
         ]
       }
