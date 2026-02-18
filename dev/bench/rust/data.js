@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771445489694,
+  "lastUpdate": 1771445808513,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -315,6 +315,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 584605,
             "range": "± 6645",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "58792b68b37331cd57e96ce4f188078a57d4496e",
+          "message": "fix: use sys.executable for PytestGate subprocess\n\nPytestGate was running bare `pytest` which resolves to the system PATH\nrather than the current Python environment. This caused failures when\nthe system pytest couldn't find packages installed in the venv.\n\nUsing `sys.executable -m pytest` ensures the gate runs within the same\nenvironment as the caller.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:12:46-08:00",
+          "tree_id": "6864faf01b800f439cfbb724179fed40ebf14049",
+          "url": "https://github.com/AreteDriver/convergent/commit/58792b68b37331cd57e96ce4f188078a57d4496e"
+        },
+        "date": 1771445807865,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 188350,
+            "range": "± 1414",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2661648,
+            "range": "± 64284",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 191061,
+            "range": "± 1544",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 683764,
+            "range": "± 4627",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 559032,
+            "range": "± 5103",
             "unit": "ns/iter"
           }
         ]
