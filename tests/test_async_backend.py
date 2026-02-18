@@ -5,6 +5,9 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+
+pytest.importorskip("pytest_asyncio")
+
 from convergent.async_backend import AsyncBackendWrapper
 from convergent.intent import (
     Evidence,

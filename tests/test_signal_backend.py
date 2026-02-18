@@ -296,6 +296,9 @@ class TestFilesystemEdgeCases:
         """OSError during clear is handled gracefully."""
         import os
 
+        if os.getuid() == 0:
+            pytest.skip("Root bypasses filesystem permission checks")
+
         signals_dir = tmp_path / "signals"
         signals_dir.mkdir()
         # Create a file we can't delete (read-only directory)
