@@ -36,6 +36,11 @@ def _agent(name: str, phi: float = 0.5) -> AgentIdentity:
     return AgentIdentity(name, "reviewer", "claude:sonnet", phi_score=phi)
 
 
+def _seed_score(scorer: PhiScorer, agent_id: str, phi: float) -> None:
+    """Seed a stored phi score so apply_vote_weight uses it."""
+    scorer._store.save_score(agent_id, "reviewer", phi)
+
+
 def _vote(
     agent: AgentIdentity,
     choice: VoteChoice,
@@ -114,8 +119,10 @@ class TestMajorityQuorum:
         decision = tri.evaluate(req.request_id)
         assert decision.outcome is DecisionOutcome.REJECTED
 
-    def test_phi_weight_breaks_tie(self, tri: Triumvirate) -> None:
+    def test_phi_weight_breaks_tie(self, tri: Triumvirate, scorer: PhiScorer) -> None:
         """High-trust approve vs low-trust reject: approve wins on weight."""
+        _seed_score(scorer, "a1", 0.9)
+        _seed_score(scorer, "a2", 0.3)
         req = tri.create_request("t", "q", "c", quorum=QuorumLevel.MAJORITY)
         # Same confidence, different phi scores
         tri.submit_vote(
@@ -130,8 +137,13 @@ class TestMajorityQuorum:
         # approve weight: 0.9*0.8=0.72, reject weight: 0.3*0.8=0.24
         assert decision.outcome is DecisionOutcome.APPROVED
 
-    def test_majority_tie_broken_by_highest_weight(self, tri: Triumvirate) -> None:
+    def test_majority_tie_broken_by_highest_weight(
+        self, tri: Triumvirate, scorer: PhiScorer
+    ) -> None:
         """When weighted totals are exactly equal, highest individual vote wins."""
+        _seed_score(scorer, "a1", 0.6)
+        _seed_score(scorer, "a2", 0.3)
+        _seed_score(scorer, "a3", 0.3)
         req = tri.create_request("t", "q", "c", quorum=QuorumLevel.MAJORITY)
         # Approve: 0.6*1.0 = 0.6, Reject: 0.3*1.0 + 0.3*1.0 = 0.6
         tri.submit_vote(
@@ -315,7 +327,9 @@ class TestReasoningSummary:
 
 
 class TestDecisionFields:
-    def test_weighted_totals(self, tri: Triumvirate) -> None:
+    def test_weighted_totals(self, tri: Triumvirate, scorer: PhiScorer) -> None:
+        _seed_score(scorer, "a1", 0.8)
+        _seed_score(scorer, "a2", 0.6)
         req = tri.create_request("t", "q", "c")
         tri.submit_vote(
             req.request_id,
@@ -408,8 +422,11 @@ class TestTieBreaking:
         decision = tri.evaluate(req.request_id)
         assert decision.outcome is DecisionOutcome.DEADLOCK
 
-    def test_majority_tie_broken_by_reject(self, tri: Triumvirate) -> None:
+    def test_majority_tie_broken_by_reject(self, tri: Triumvirate, scorer: PhiScorer) -> None:
         """When tied totals, highest-weighted vote is a reject → REJECTED."""
+        _seed_score(scorer, "a1", 0.3)
+        _seed_score(scorer, "a2", 0.3)
+        _seed_score(scorer, "a3", 0.6)
         req = tri.create_request("t", "q", "c", quorum=QuorumLevel.MAJORITY)
         # Approve: 0.3*1.0 + 0.3*1.0 = 0.6
         # Reject: 0.6*1.0 = 0.6

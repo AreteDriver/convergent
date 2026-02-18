@@ -11,6 +11,7 @@ initialized lazily and degrade gracefully if not configured.
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -257,7 +258,7 @@ class GorgonBridge:
                 Signal(
                     signal_type="task_outcome",
                     source_agent=agent_id,
-                    payload=(f'{{"skill_domain":"{skill_domain}","outcome":"{outcome}"}}'),
+                    payload=json.dumps({"skill_domain": skill_domain, "outcome": outcome}),
                 )
             )
 

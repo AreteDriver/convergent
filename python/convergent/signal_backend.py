@@ -19,6 +19,14 @@ from convergent.protocol import Signal
 
 logger = logging.getLogger(__name__)
 
+# Characters unsafe in filenames — replaced with underscores
+_UNSAFE_FILENAME_RE = __import__("re").compile(r"[/\\.\x00]")
+
+
+def _sanitize_filename_component(value: str) -> str:
+    """Replace path-separator and null characters to prevent path traversal."""
+    return _UNSAFE_FILENAME_RE.sub("_", value)
+
 
 @runtime_checkable
 class SignalBackend(Protocol):
@@ -114,8 +122,13 @@ class FilesystemSignalBackend:
     def store_signal(self, signal: Signal) -> None:
         """Write a signal as a JSON file to the signals directory."""
         safe_ts = signal.timestamp.replace(":", "-").replace("+", "p")
-        filename = f"{safe_ts}_{signal.signal_type}_{signal.source_agent}.json"
+        safe_type = _sanitize_filename_component(signal.signal_type)
+        safe_agent = _sanitize_filename_component(signal.source_agent)
+        filename = f"{safe_ts}_{safe_type}_{safe_agent}.json"
         filepath = self._signals_dir / filename
+        # Guard against path traversal: ensure resolved path stays within signals_dir
+        if not filepath.resolve().parent == self._signals_dir.resolve():
+            raise ValueError(f"Signal filename resolves outside signals directory: {filename}")
         filepath.write_text(signal.to_json(), encoding="utf-8")
         logger.info(
             "Stored signal %s from %s (target=%s)",
