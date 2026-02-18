@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771445808513,
+  "lastUpdate": 1771446542559,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -369,6 +369,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 559032,
             "range": "± 5103",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "6ed6ab21229e65e9a63e7ebe75da845257d7ff71",
+          "message": "chore: rename PyPI package to convergentAI\n\nThe name \"convergent\" was already taken on PyPI. Package installs as\n`pip install convergentAI` but import name remains `import convergent`.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:24:50-08:00",
+          "tree_id": "f0211cb25e82c620befd291de068828103d69bbe",
+          "url": "https://github.com/AreteDriver/convergent/commit/6ed6ab21229e65e9a63e7ebe75da845257d7ff71"
+        },
+        "date": 1771446541838,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 227616,
+            "range": "± 1409",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2882900,
+            "range": "± 28671",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 194544,
+            "range": "± 1258",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 749604,
+            "range": "± 5194",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 620570,
+            "range": "± 4506",
             "unit": "ns/iter"
           }
         ]
