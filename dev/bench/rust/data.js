@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771411022646,
+  "lastUpdate": 1771419412421,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -207,6 +207,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 613221,
             "range": "± 4397",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "2680abec5690eed42c153e14c8c9f9f7921ae6a0",
+          "message": "ci: add CodeQL security scan workflow\n\nWeekly schedule + push/PR triggers on main. Python security-and-quality queries.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T04:53:05-08:00",
+          "tree_id": "0263252c4bfc69317ec01871dc1a76e094fc4cbe",
+          "url": "https://github.com/AreteDriver/convergent/commit/2680abec5690eed42c153e14c8c9f9f7921ae6a0"
+        },
+        "date": 1771419411779,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 190874,
+            "range": "± 2469",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2664769,
+            "range": "± 8208",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 185414,
+            "range": "± 3044",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 679703,
+            "range": "± 7480",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 555620,
+            "range": "± 4805",
             "unit": "ns/iter"
           }
         ]
