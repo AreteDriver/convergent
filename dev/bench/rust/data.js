@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771447235585,
+  "lastUpdate": 1771454199230,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -477,6 +477,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 560999,
             "range": "± 5424",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "ee20372eeabc715ee522c568da50085279106379",
+          "message": "chore: bump version to 1.1.0 for Phase 4 release\n\nPhase 4 modules (health dashboard, cycle detection, event log) were\nadded after v1.0.0 PyPI release. This version includes all Phase 4\nexports needed by Gorgon.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T14:32:49-08:00",
+          "tree_id": "bf8a37c245a7416957ca0d81f5bdc864263a4e92",
+          "url": "https://github.com/AreteDriver/convergent/commit/ee20372eeabc715ee522c568da50085279106379"
+        },
+        "date": 1771454199005,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 230471,
+            "range": "± 2261",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2918762,
+            "range": "± 31942",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 195455,
+            "range": "± 5741",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 743631,
+            "range": "± 5631",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 612602,
+            "range": "± 4350",
             "unit": "ns/iter"
           }
         ]
