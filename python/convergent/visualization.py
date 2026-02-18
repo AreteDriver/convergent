@@ -140,8 +140,10 @@ def html_report(resolver: IntentResolver) -> str:
         "</ul>",
         "<h2>Intents by Agent</h2>",
         "<table>",
-        "<tr><th>Agent</th><th>Intent</th><th class='stab'>Stability</th>"
-        "<th>Provides</th><th>Requires</th></tr>",
+        (
+            "<tr><th>Agent</th><th>Intent</th><th class='stab'>Stability</th>"
+            "<th>Provides</th><th>Requires</th></tr>"
+        ),
     ]
 
     for agent_id in sorted(by_agent):

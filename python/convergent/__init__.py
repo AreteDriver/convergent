@@ -245,7 +245,7 @@ try:
 
     __all__.append("AnthropicSemanticMatcher")
 except ImportError:
-    pass
+    pass  # anthropic not installed; AnthropicSemanticMatcher unavailable
 
 
 def create_delegation_checker(

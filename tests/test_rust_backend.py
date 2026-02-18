@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-_core = pytest.importorskip("convergent._core")
+pytest.importorskip("convergent._core")
 
 from convergent.intent import (  # noqa: E402
     Constraint,
