@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -185,7 +186,7 @@ class PytestGate(ConstraintGate):
         return f"pytest({self.test_path})"
 
     def run(self, intent: Intent) -> GateRunResult:
-        cmd = ["pytest", self.test_path, "-v", "--tb=short"]
+        cmd = [sys.executable, "-m", "pytest", self.test_path, "-v", "--tb=short"]
         if self.markers:
             cmd.extend(["-m", self.markers])
         cmd.extend(self.extra_args)
