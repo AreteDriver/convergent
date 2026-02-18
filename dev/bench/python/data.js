@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771419410879,
+  "lastUpdate": 1771445487891,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -322,6 +322,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007555154391481057",
             "extra": "mean: 1.1518596838319997 msec\nrounds: 835"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "312738983506d4f63b12880fa742713617301eff",
+          "message": "fix: resolve 3 CodeQL alerts (empty-except, string-concat, unused-global)\n\n- Add explanatory comment to ImportError catch in __init__.py\n- Wrap implicit string concatenation in visualization.py with parens\n- Remove unused _core variable in test_rust_backend.py (importorskip\n  side effect still triggers module skip)\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:07:25-08:00",
+          "tree_id": "60bbd43b5431d5e38a65f7e8112a0bae3ba07edd",
+          "url": "https://github.com/AreteDriver/convergent/commit/312738983506d4f63b12880fa742713617301eff"
+        },
+        "date": 1771445487457,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 725.0017119719123,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017635979423876467",
+            "extra": "mean: 1.3793070878138032 msec\nrounds: 558"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 294.4117272466849,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006567930944369878",
+            "extra": "mean: 3.396603828767015 msec\nrounds: 292"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 185413.22409391913,
+            "unit": "iter/sec",
+            "range": "stddev: 7.796216009574289e-7",
+            "extra": "mean: 5.393358563753039 usec\nrounds: 54894"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86639.20613619265,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012172446552035745",
+            "extra": "mean: 11.542118685021748 usec\nrounds: 44319"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 213.75779014280127,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000043606931872120324",
+            "extra": "mean: 4.678192075862818 msec\nrounds: 145"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 775.4362065361179,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007134213127240967",
+            "extra": "mean: 1.2895967348068658 msec\nrounds: 724"
           }
         ]
       }
