@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771445487891,
+  "lastUpdate": 1771445806739,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -388,6 +388,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007134213127240967",
             "extra": "mean: 1.2895967348068658 msec\nrounds: 724"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "58792b68b37331cd57e96ce4f188078a57d4496e",
+          "message": "fix: use sys.executable for PytestGate subprocess\n\nPytestGate was running bare `pytest` which resolves to the system PATH\nrather than the current Python environment. This caused failures when\nthe system pytest couldn't find packages installed in the venv.\n\nUsing `sys.executable -m pytest` ensures the gate runs within the same\nenvironment as the caller.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:12:46-08:00",
+          "tree_id": "6864faf01b800f439cfbb724179fed40ebf14049",
+          "url": "https://github.com/AreteDriver/convergent/commit/58792b68b37331cd57e96ce4f188078a57d4496e"
+        },
+        "date": 1771445805931,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 709.4616486889983,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005200619468759187",
+            "extra": "mean: 1.4095194600693108 msec\nrounds: 576"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 283.18934265903437,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000024504668387848643",
+            "extra": "mean: 3.531206332167733 msec\nrounds: 286"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 192686.87011819854,
+            "unit": "iter/sec",
+            "range": "stddev: 4.552206806782281e-7",
+            "extra": "mean: 5.189767208251278 usec\nrounds: 64809"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 107393.85096208635,
+            "unit": "iter/sec",
+            "range": "stddev: 8.041017788295653e-7",
+            "extra": "mean: 9.311520082774885 usec\nrounds: 52184"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 215.35736232455807,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00024177661905041596",
+            "extra": "mean: 4.643444687500085 msec\nrounds: 144"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 867.1071904991239,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007872157247968101",
+            "extra": "mean: 1.1532599555821703 msec\nrounds: 833"
           }
         ]
       }
