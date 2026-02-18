@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771411020984,
+  "lastUpdate": 1771419410879,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -256,6 +256,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007104754567489636",
             "extra": "mean: 1.3371649017097345 msec\nrounds: 702"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "2680abec5690eed42c153e14c8c9f9f7921ae6a0",
+          "message": "ci: add CodeQL security scan workflow\n\nWeekly schedule + push/PR triggers on main. Python security-and-quality queries.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T04:53:05-08:00",
+          "tree_id": "0263252c4bfc69317ec01871dc1a76e094fc4cbe",
+          "url": "https://github.com/AreteDriver/convergent/commit/2680abec5690eed42c153e14c8c9f9f7921ae6a0"
+        },
+        "date": 1771419410146,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 714.1125276110146,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000012688692399760322",
+            "extra": "mean: 1.4003395282048765 msec\nrounds: 585"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 285.44391266801887,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005470201908203388",
+            "extra": "mean: 3.5033152070159383 msec\nrounds: 285"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 201373.17705924556,
+            "unit": "iter/sec",
+            "range": "stddev: 6.577300767782243e-7",
+            "extra": "mean: 4.965904668156436 usec\nrounds: 58354"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 109340.65344582143,
+            "unit": "iter/sec",
+            "range": "stddev: 6.560436362542127e-7",
+            "extra": "mean: 9.145729136286006 usec\nrounds: 53226"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 216.44633372797486,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003957335926727695",
+            "extra": "mean: 4.620082875863256 msec\nrounds: 145"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 868.1612995371156,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007555154391481057",
+            "extra": "mean: 1.1518596838319997 msec\nrounds: 835"
           }
         ]
       }
