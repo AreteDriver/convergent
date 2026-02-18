@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771386635540,
+  "lastUpdate": 1771387353615,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -103,6 +103,56 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 612640,
             "range": "± 5079",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "03b1ab549f56ec7c2f2a089ffbdfca5436a3e729",
+          "message": "fix(tests): skip tests gracefully when optional deps or root perms",
+          "timestamp": "2026-02-15T11:00:56Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/16/commits/03b1ab549f56ec7c2f2a089ffbdfca5436a3e729"
+        },
+        "date": 1771387352973,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 190070,
+            "range": "± 1773",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2653133,
+            "range": "± 19042",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 186856,
+            "range": "± 3305",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 682438,
+            "range": "± 7533",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 556699,
+            "range": "± 19645",
             "unit": "ns/iter"
           }
         ]
