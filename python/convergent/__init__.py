@@ -36,6 +36,9 @@ from convergent.contract import (
 
 # Phase 3: Coordination Protocol
 from convergent.coordination_config import CoordinationConfig
+
+# Phase 4: Observability & Analysis
+from convergent.cycles import DependencyCycle, DependencyGraph, find_cycles, topological_order
 from convergent.economics import (
     Budget,
     CoordinationCostReport,
@@ -44,6 +47,7 @@ from convergent.economics import (
     EscalationDecision,
     EscalationPolicy,
 )
+from convergent.event_log import CoordinationEvent, EventLog, EventType, event_timeline
 from convergent.flocking import FlockingCoordinator
 from convergent.gates import (
     CommandGate,
@@ -62,6 +66,15 @@ from convergent.governor import (
     MergeGovernor,
     ProposalResult,
     VerdictKind,
+)
+from convergent.health import (
+    CoordinationHealth,
+    HealthChecker,
+    IntentGraphHealth,
+    ScoringHealth,
+    StigmergyHealth,
+    VotingHealth,
+    health_report,
 )
 from convergent.intent import (
     Adjustment,
@@ -237,6 +250,24 @@ __all__ = [
     "FlockingCoordinator",
     # Phase 3: Gorgon Integration
     "GorgonBridge",
+    # Phase 4: Health Dashboard
+    "CoordinationHealth",
+    "HealthChecker",
+    "IntentGraphHealth",
+    "ScoringHealth",
+    "StigmergyHealth",
+    "VotingHealth",
+    "health_report",
+    # Phase 4: Cycle Detection
+    "DependencyCycle",
+    "DependencyGraph",
+    "find_cycles",
+    "topological_order",
+    # Phase 4: Event Log
+    "CoordinationEvent",
+    "EventLog",
+    "EventType",
+    "event_timeline",
 ]
 
 # Conditional export: AnthropicSemanticMatcher (only when anthropic installed)
