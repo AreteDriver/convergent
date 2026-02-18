@@ -18,7 +18,7 @@ This is an open-source companion to [Gorgon](https://github.com/AreteDriver/Gorg
 - **Rust (optional)** — PyO3 bindings for performance-critical graph operations
 - **SQLite** — persistence for intent graph, scores, stigmergy markers, vote history
 - **No frameworks** — this is a library, not an application
-- **pytest** — testing (800+ tests, 99% coverage)
+- **pytest** — testing (880+ tests, 97% coverage)
 
 ## Architecture
 
@@ -102,7 +102,12 @@ convergent/
 │   ├── sqlite_signal_backend.py ← SQLite signal backend (cross-process, WAL)
 │   ├── stigmergy.py           ← Trail markers with evaporation/reinforcement (own SQLite)
 │   ├── flocking.py            ← Swarm coordination (alignment/cohesion/separation)
-│   └── gorgon_bridge.py       ← Single entry point for Gorgon integration
+│   ├── gorgon_bridge.py       ← Single entry point for Gorgon integration
+│   │
+│   │── # --- Phase 4: Observability & Analysis (v1.1.0) ---
+│   ├── health.py              ← CoordinationHealth dashboard + grading (A-F)
+│   ├── cycles.py              ← Dependency cycle detection + topological sort
+│   └── event_log.py           ← Append-only coordination event log + timeline
 │
 ├── src/                       ← Rust core (PyO3) — DO NOT BREAK
 │   ├── lib.rs                 ← PyO3 module entry point
@@ -111,7 +116,7 @@ convergent/
 │   ├── matching.rs            ← Structural matching
 │   └── stability.rs           ← Stability scoring
 │
-├── tests/                     ← 670+ tests, 97% coverage
+├── tests/                     ← 880+ tests, 97% coverage
 │   ├── test_convergence.py    ← Core convergence properties
 │   ├── test_contract.py       ← Contract validation
 │   ├── test_three_layer.py    ← 3-layer coordination stack
@@ -135,7 +140,12 @@ convergent/
 │   ├── test_sqlite_signal_backend.py ← SQLite signal backend tests
 │   ├── test_stigmergy.py      ← Markers + evaporation + context
 │   ├── test_flocking.py       ← Alignment/cohesion/separation
-│   └── test_gorgon_bridge.py  ← Bridge lifecycle + enrichment
+│   ├── test_gorgon_bridge.py  ← Bridge lifecycle + enrichment
+│   │
+│   │── # --- Phase 4 tests ---
+│   ├── test_health.py         ← Health dashboard + grading
+│   ├── test_cycles.py         ← Cycle detection + topological sort
+│   └── test_event_log.py      ← Event log + timeline renderer
 │
 └── scripts/
     └── smoke_test_llm.py      ← Live LLM smoke test
@@ -168,7 +178,7 @@ Same as Gorgon:
 ## Current State (v1.0.0)
 
 ### Phase 1-2: Intent Graph + Intelligence (Complete)
-- **33 production modules**, 800+ tests, 99% coverage
+- **36 production modules**, 880+ tests, 97% coverage
 - **Intent graph** — Core data model: Intent, InterfaceSpec, Constraint, Evidence
 - **Contract system** — Validation, conflict detection, mutation tracking
 - **Three-layer stack** — Constraints → Intent Graph → Economics
@@ -189,6 +199,11 @@ Same as Gorgon:
 - **Stigmergy** — Trail markers with exponential evaporation, reinforcement, context generation, own SQLite DB
 - **Flocking** — Alignment (pattern sharing), cohesion (Jaccard keyword drift detection), separation (file conflict avoidance)
 - **GorgonBridge** — Single entry point for Gorgon: prompt enrichment, consensus voting, outcome recording, marker management, decision history queries
+
+### Phase 4: Observability & Analysis (v1.1.0)
+- **Health dashboard** — HealthChecker aggregates metrics from intent graph, stigmergy, phi scores, voting. Grading A-F based on issue count. CLI `convergent health <db>`
+- **Cycle detection** — DependencyGraph from provides/requires edges, DFS cycle detection, Kahn's topological sort for execution ordering. CLI `convergent cycles <db>`
+- **Event log** — Append-only SQLite log with 10 event types, correlation IDs, time-range queries, timeline renderer. CLI `convergent events <db>`
 
 ### Gorgon Integration
 - `create_delegation_checker()` — Intent graph delegation (Phase 1-2)

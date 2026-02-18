@@ -5,8 +5,9 @@ Coordination library for multi-agent AI systems. Agents share an intent graph, d
 [![CI](https://github.com/AreteDriver/convergent/actions/workflows/ci.yml/badge.svg)](https://github.com/AreteDriver/convergent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-800+-brightgreen.svg)]()
-[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)]()
+[![PyPI](https://img.shields.io/pypi/v/convergentAI.svg)](https://pypi.org/project/convergentAI/)
+[![Tests](https://img.shields.io/badge/tests-880+-brightgreen.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)]()
 
 ## Why This Exists
 
@@ -34,7 +35,7 @@ Coordination library for multi-agent AI systems. Agents share an intent graph, d
 ### Install
 
 ```bash
-pip install convergent
+pip install convergentAI
 # or from source:
 git clone https://github.com/AreteDriver/convergent.git
 cd convergent
