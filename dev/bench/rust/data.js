@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771446542559,
+  "lastUpdate": 1771447235585,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -423,6 +423,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 620570,
             "range": "± 4506",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "efb695ed60586fd6a0002e77908669f78f31710b",
+          "message": "feat: add health dashboard, cycle detection, and event log\n\nThree new observability modules for Phase 4:\n\n1. health.py — CoordinationHealth aggregates metrics from all subsystems\n   (intent graph, stigmergy, phi scores, voting). HealthChecker with\n   configurable grading (A-F). CLI: `convergent health <db_path>`\n\n2. cycles.py — DependencyGraph from provides/requires edges with\n   DFS-based cycle detection and Kahn's topological sort for safe\n   execution ordering. CLI: `convergent cycles <db_path>`\n\n3. event_log.py — Append-only SQLite event log for all coordination\n   events. 10 event types, correlation IDs for tracing, timeline\n   renderer. CLI: `convergent events <db_path>`\n\n60 new tests, all 887 tests passing.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-18T12:36:52-08:00",
+          "tree_id": "f4b1180ad817df1175625ba55860381f4ebd601f",
+          "url": "https://github.com/AreteDriver/convergent/commit/efb695ed60586fd6a0002e77908669f78f31710b"
+        },
+        "date": 1771447234980,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 189723,
+            "range": "± 3289",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2678493,
+            "range": "± 10619",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 186223,
+            "range": "± 1291",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 683825,
+            "range": "± 8663",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 560999,
+            "range": "± 5424",
             "unit": "ns/iter"
           }
         ]
