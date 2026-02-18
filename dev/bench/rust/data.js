@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771387353615,
+  "lastUpdate": 1771411022646,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -153,6 +153,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 556699,
             "range": "± 19645",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@gmail.com",
+            "name": "James C. Young",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0094c737ce833547425a0092105343ef4ffe56d2",
+          "message": "Merge pull request #16 from AreteDriver/claude/general-improvements-TDGXq\n\nfix(tests): skip tests gracefully when optional deps or root perms",
+          "timestamp": "2026-02-18T02:33:14-08:00",
+          "tree_id": "f72aecde00f03e2bfe79207e5298016c2324c5c0",
+          "url": "https://github.com/AreteDriver/convergent/commit/0094c737ce833547425a0092105343ef4ffe56d2"
+        },
+        "date": 1771411022423,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 225003,
+            "range": "± 2639",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2875326,
+            "range": "± 28313",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 195882,
+            "range": "± 4855",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 744849,
+            "range": "± 5832",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 613221,
+            "range": "± 4397",
             "unit": "ns/iter"
           }
         ]
