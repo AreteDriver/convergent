@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496485547,
+  "lastUpdate": 1771496825427,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -731,6 +731,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 613987,
             "range": "± 5604",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "cfc1e28cf0be24b7cf9180aa0d80b34b1752cc32",
+          "message": "test: push coverage 97% → 98% with 19 targeted tests\n\nCover previously-uncovered edge cases:\n- resolver.py: low-stability skip, semantic conflicts, structural/semantic\n  constraint conflicts (lines 74, 273, 309-310, 355-356)\n- health.py: same-agent skip, low stability, low marker strength, high\n  escalation rate issues (lines 163, 173, 212, 295)\n- governor.py: HARD_FAIL in evaluate_publish (lines 195-196)\n- scoring.py: naive datetime UTC normalization (line 180)\n- signal_backend.py: path traversal guard (line 131)\n- stigmergy.py: naive datetime UTC normalization (line 213)\n- intent.py: Evidence.to_dict() (line 134)\n- constraints.py: TypedConstraint.to_base, GateResult properties (84, 122, 126)\n- economics.py: non-zero rate/cost, AUTO_RESOLVE savings (145, 305, 313)\n\nAlso add poetry.lock to .gitignore (library shouldn't commit lock files).\n\n27/36 modules now at 100% coverage. Remaining gaps:\n- rust_backend.py (89%): PyO3 import guards require compiled Rust\n- flocking.py (99%): unreachable defensive guard (union==0 after empty check)\n\n906 tests, 98% coverage, all passing.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-19T02:23:12-08:00",
+          "tree_id": "172b6a69671d5a7c599bd0a4744acf80fa1f1b09",
+          "url": "https://github.com/AreteDriver/convergent/commit/cfc1e28cf0be24b7cf9180aa0d80b34b1752cc32"
+        },
+        "date": 1771496825050,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 229287,
+            "range": "± 2199",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2891375,
+            "range": "± 94940",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 196918,
+            "range": "± 9366",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 751879,
+            "range": "± 17819",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 620629,
+            "range": "± 6359",
             "unit": "ns/iter"
           }
         ]
