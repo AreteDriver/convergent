@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496232527,
+  "lastUpdate": 1771496247436,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -714,6 +714,68 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00046935488211779966",
             "extra": "mean: 1.2857369487534007 msec\nrounds: 722"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "ecfefd64594549892b08f50a317d43f02ba1f5d0",
+          "message": "chore(deps): update criterion requirement from 0.5 to 0.8",
+          "timestamp": "2026-02-18T22:33:01Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/18/commits/ecfefd64594549892b08f50a317d43f02ba1f5d0"
+        },
+        "date": 1771496246809,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 682.3550442277856,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00016293599549666252",
+            "extra": "mean: 1.4655127245841495 msec\nrounds: 541"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 280.3248379259911,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003106639011603401",
+            "extra": "mean: 3.5672900318023593 msec\nrounds: 283"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 181096.66675703684,
+            "unit": "iter/sec",
+            "range": "stddev: 6.767310087327178e-7",
+            "extra": "mean: 5.521912787835137 usec\nrounds: 55451"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86100.93257712279,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001010417888804579",
+            "extra": "mean: 11.614276060300213 usec\nrounds: 45577"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 200.37135162407458,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008616092915681991",
+            "extra": "mean: 4.990733415204702 msec\nrounds: 171"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 758.9423993045624,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000737965397727109",
+            "extra": "mean: 1.3176230513887808 msec\nrounds: 720"
           }
         ]
       }
