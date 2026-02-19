@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496251866,
+  "lastUpdate": 1771496485547,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -681,6 +681,56 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 617652,
             "range": "± 5076",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "a51d0eb160eacdbbdfb6defe2eca02d201cf93c0",
+          "message": "chore(deps): bump actions/setup-python from 5 to 6",
+          "timestamp": "2026-02-19T10:16:47Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/17/commits/a51d0eb160eacdbbdfb6defe2eca02d201cf93c0"
+        },
+        "date": 1771496484927,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 228170,
+            "range": "± 7812",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2882591,
+            "range": "± 30343",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 195992,
+            "range": "± 2243",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 744523,
+            "range": "± 4825",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 613987,
+            "range": "± 5604",
             "unit": "ns/iter"
           }
         ]
