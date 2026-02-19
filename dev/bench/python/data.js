@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496483905,
+  "lastUpdate": 1771496824319,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -900,6 +900,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0009020550131041566",
             "extra": "mean: 1.3637520165739587 msec\nrounds: 724"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "cfc1e28cf0be24b7cf9180aa0d80b34b1752cc32",
+          "message": "test: push coverage 97% → 98% with 19 targeted tests\n\nCover previously-uncovered edge cases:\n- resolver.py: low-stability skip, semantic conflicts, structural/semantic\n  constraint conflicts (lines 74, 273, 309-310, 355-356)\n- health.py: same-agent skip, low stability, low marker strength, high\n  escalation rate issues (lines 163, 173, 212, 295)\n- governor.py: HARD_FAIL in evaluate_publish (lines 195-196)\n- scoring.py: naive datetime UTC normalization (line 180)\n- signal_backend.py: path traversal guard (line 131)\n- stigmergy.py: naive datetime UTC normalization (line 213)\n- intent.py: Evidence.to_dict() (line 134)\n- constraints.py: TypedConstraint.to_base, GateResult properties (84, 122, 126)\n- economics.py: non-zero rate/cost, AUTO_RESOLVE savings (145, 305, 313)\n\nAlso add poetry.lock to .gitignore (library shouldn't commit lock files).\n\n27/36 modules now at 100% coverage. Remaining gaps:\n- rust_backend.py (89%): PyO3 import guards require compiled Rust\n- flocking.py (99%): unreachable defensive guard (union==0 after empty check)\n\n906 tests, 98% coverage, all passing.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-19T02:23:12-08:00",
+          "tree_id": "172b6a69671d5a7c599bd0a4744acf80fa1f1b09",
+          "url": "https://github.com/AreteDriver/convergent/commit/cfc1e28cf0be24b7cf9180aa0d80b34b1752cc32"
+        },
+        "date": 1771496823850,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 672.7490145795553,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00019216243695496018",
+            "extra": "mean: 1.486438446327514 msec\nrounds: 531"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 285.87638507709056,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000051908231415921634",
+            "extra": "mean: 3.498015408759055 msec\nrounds: 274"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 182057.30099473064,
+            "unit": "iter/sec",
+            "range": "stddev: 7.49938434266945e-7",
+            "extra": "mean: 5.4927761454012956 usec\nrounds: 56358"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86247.13298319974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011786533442679233",
+            "extra": "mean: 11.594588311646163 usec\nrounds: 43171"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 194.9152448055643,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000580754179008558",
+            "extra": "mean: 5.130435030864517 msec\nrounds: 162"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 748.4980793475669,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0010780381360457197",
+            "extra": "mean: 1.3360087722224436 msec\nrounds: 720"
           }
         ]
       }
