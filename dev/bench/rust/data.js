@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496234240,
+  "lastUpdate": 1771496248627,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -581,6 +581,56 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 615261,
             "range": "± 4801",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "ecfefd64594549892b08f50a317d43f02ba1f5d0",
+          "message": "chore(deps): update criterion requirement from 0.5 to 0.8",
+          "timestamp": "2026-02-18T22:33:01Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/18/commits/ecfefd64594549892b08f50a317d43f02ba1f5d0"
+        },
+        "date": 1771496248195,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 229472,
+            "range": "± 2683",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2915048,
+            "range": "± 20621",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 195176,
+            "range": "± 3948",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 744215,
+            "range": "± 7280",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 613831,
+            "range": "± 5522",
             "unit": "ns/iter"
           }
         ]
