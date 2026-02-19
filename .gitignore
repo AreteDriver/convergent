@@ -32,3 +32,6 @@ htmlcov/
 # SQLite
 *.db
 *.sqlite3
+
+# Lock files (library — consumers manage their own)
+poetry.lock

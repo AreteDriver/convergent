@@ -1,8 +1,10 @@
 """
-Coverage push tests — filling gaps to reach 95%+.
+Coverage push tests — filling gaps to reach 99%+.
 
 Targets: governor.py, gates.py, agent.py, versioning.py, economics.py,
-replay.py, benchmark.py, matching.py, __init__.py, __main__.py, codegen_demo.py
+replay.py, benchmark.py, matching.py, __init__.py, __main__.py, codegen_demo.py,
+resolver.py, health.py, flocking.py, scoring.py, signal_backend.py, stigmergy.py,
+intent.py
 """
 
 from __future__ import annotations
@@ -1039,3 +1041,508 @@ class TestCodegenDemoMain:
             mock_demo.return_value = MagicMock(summary=MagicMock(return_value="test"))
             main()
             mock_demo.assert_called_once()
+
+
+# ===================================================================
+# Phase 2 coverage push — resolver.py, health.py, governor.py,
+# flocking.py, scoring.py, signal_backend.py, stigmergy.py, intent.py
+# ===================================================================
+
+
+class TestResolverLowStabilitySkip:
+    """Cover resolver.py:74 — skip intent when stability < min_stability."""
+
+    def test_find_overlapping_skips_low_stability(self) -> None:
+        backend = PythonGraphBackend()
+        spec = _make_spec(tags=["auth", "users"])
+        # Publish a low-stability intent (no evidence → base 0.1)
+        low_stab = Intent(agent_id="agent-low", intent="weak")
+        low_stab.provides = [spec]
+        backend.publish(low_stab)
+
+        # Query overlapping with high min_stability threshold
+        query_spec = _make_spec(tags=["auth", "users"])
+        result = backend.find_overlapping(
+            specs=[query_spec], exclude_agent="agent-other", min_stability=0.5
+        )
+        assert len(result) == 0  # Low-stability intent was skipped
+
+
+class TestResolverSemanticConflict:
+    """Cover resolver.py:273 — semantic overlap where my stability >= theirs."""
+
+    def test_semantic_conflict_when_my_stability_higher(self) -> None:
+        from convergent.semantic import SemanticMatch
+
+        backend = PythonGraphBackend()
+        resolver = IntentResolver(backend=backend, min_stability=0.0)
+
+        # Existing intent: lower stability
+        their_spec = _make_spec(name="AuthHandler", tags=["auth", "handler"])
+        existing = _make_intent(
+            agent_id="agent-existing",
+            intent_text="their auth",
+            provides=[their_spec],
+            stability=0.3,
+        )
+        resolver.publish(existing)
+
+        # New intent: higher stability, different spec name (no structural overlap)
+        my_spec = InterfaceSpec(
+            name="LoginManager",
+            kind=InterfaceKind.CLASS,
+            signature="class LoginManager",
+            tags=["login", "manager"],  # Different tags → no structural overlap
+        )
+        new_intent = _make_intent(
+            agent_id="agent-new",
+            intent_text="my auth",
+            provides=[my_spec],
+            stability=0.8,
+            evidence=[
+                Evidence.test_pass("pass"),
+                Evidence.code_committed("c"),
+                Evidence.consumed_by("other"),
+            ],
+        )
+
+        # Mock semantic matcher to report overlap
+        mock_matcher = MagicMock()
+        mock_matcher.check_overlap_batch.return_value = [
+            SemanticMatch(overlap=True, confidence=0.95, reasoning="same auth concept")
+        ]
+        mock_matcher.check_constraint_applies.return_value = MagicMock(
+            applies=False, confidence=0.0, reasoning=""
+        )
+        resolver.semantic_matcher = mock_matcher
+
+        result = resolver.resolve(new_intent)
+        # My stability (0.8) > their stability (0.3) → conflict (not adjustment)
+        assert len(result.conflicts) >= 1
+        assert any("semantic" in c.description for c in result.conflicts)
+
+
+class TestResolverStructuralConstraintConflict:
+    """Cover resolver.py:309-310 — structural constraint conflict between intents."""
+
+    def test_conflicting_constraints_detected(self) -> None:
+        backend = PythonGraphBackend()
+        resolver = IntentResolver(backend=backend, min_stability=0.0)
+
+        # Agent A: has constraint on "User model" requiring email field
+        spec_a = _make_spec(name="UserModel", tags=["user", "model"])
+        constraint_a = Constraint(
+            target="User model",
+            requirement="must have email: str",
+            affects_tags=["user", "model"],
+        )
+        intent_a = _make_intent(
+            agent_id="agent-a",
+            intent_text="build user model",
+            provides=[spec_a],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass")],
+        )
+        intent_a.constraints = [constraint_a]
+        resolver.publish(intent_a)
+
+        # Agent B: has CONFLICTING constraint on same target (different requirement)
+        spec_b = _make_spec(name="UserProfile", tags=["user", "model"])
+        constraint_b = Constraint(
+            target="User model",
+            requirement="must have username: str",  # Different from agent A
+            affects_tags=["user", "model"],
+        )
+        intent_b = _make_intent(
+            agent_id="agent-b",
+            intent_text="build user profile",
+            provides=[spec_b],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass")],
+        )
+        intent_b.constraints = [constraint_b]
+
+        result = resolver.resolve(intent_b)
+        # Agent A's constraint applies to intent_b (shared tags: user, model)
+        # AND intent_b has a conflicting constraint (same target, different requirement)
+        assert any("Constraint conflict" in c.description for c in result.conflicts)
+
+
+class TestResolverSemanticConstraintConflict:
+    """Cover resolver.py:355-356 — semantic constraint conflict path."""
+
+    def test_semantic_constraint_conflict_detected(self) -> None:
+        from convergent.semantic import ConstraintApplicability
+
+        backend = PythonGraphBackend()
+        resolver = IntentResolver(backend=backend, min_stability=0.0)
+
+        # Agent A: constraint that does NOT structurally match agent B's tags
+        constraint_a = Constraint(
+            target="Authentication",
+            requirement="must use OAuth2",
+            affects_tags=["security", "oauth"],  # Tags that won't match B's spec
+        )
+        spec_a = _make_spec(name="OAuthService", tags=["security", "oauth"])
+        intent_a = _make_intent(
+            agent_id="agent-a",
+            intent_text="oauth service",
+            provides=[spec_a],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass")],
+        )
+        intent_a.constraints = [constraint_a]
+        resolver.publish(intent_a)
+
+        # Agent B: HAS a conflicting constraint (same target, different requirement)
+        # But B's tags DON'T overlap with A's affects_tags → skip structural path
+        constraint_b = Constraint(
+            target="Authentication",
+            requirement="must use SAML",  # Conflicts with A's OAuth2
+            affects_tags=["login", "sso"],
+        )
+        spec_b = _make_spec(name="LoginService", tags=["login", "sso"])
+        intent_b = _make_intent(
+            agent_id="agent-b",
+            intent_text="login service",
+            provides=[spec_b],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass")],
+        )
+        intent_b.constraints = [constraint_b]
+
+        # Mock semantic matcher: constraint applies semantically
+        mock_matcher = MagicMock()
+        # Overlap batch returns no semantic overlaps (one pair: B provides vs A provides)
+        mock_matcher.check_overlap_batch.return_value = [
+            MagicMock(overlap=False, confidence=0.1, reasoning="different")
+        ]
+        # Constraint applies semantically
+        mock_matcher.check_constraint_applies.return_value = ConstraintApplicability(
+            applies=True, confidence=0.9, reasoning="both about auth"
+        )
+        resolver.semantic_matcher = mock_matcher
+
+        result = resolver.resolve(intent_b)
+        assert any(
+            "Constraint conflict" in c.description and "semantic" in c.description
+            for c in result.conflicts
+        )
+
+
+class TestHealthSameAgentSkip:
+    """Cover health.py:163 — skip same-agent pairs in conflict counting."""
+
+    def test_same_agent_intents_not_counted_as_conflict(self) -> None:
+        from convergent.health import HealthChecker
+
+        backend = PythonGraphBackend()
+        # Same agent, overlapping specs → should NOT count as conflict
+        spec = InterfaceSpec(name="AuthService", kind=InterfaceKind.FUNCTION, signature="")
+        i1 = Intent(
+            agent_id="same-agent",
+            intent="build auth v1",
+            provides=[spec],
+            evidence=[Evidence(kind=EvidenceKind.TEST_PASS, description="pass")],
+        )
+        i2 = Intent(
+            agent_id="same-agent",
+            intent="build auth v2",
+            provides=[spec],
+            evidence=[Evidence(kind=EvidenceKind.TEST_PASS, description="pass")],
+        )
+        backend.publish(i1)
+        backend.publish(i2)
+        resolver = IntentResolver(backend=backend)
+
+        checker = HealthChecker(resolver=resolver)
+        health = checker.check()
+        # Same agent → conflict_count should be 0
+        assert health.intent_graph.conflict_count == 0
+
+
+class TestHealthLowStabilityIssue:
+    """Cover health.py:173 — low avg stability triggers issue."""
+
+    def test_low_avg_stability_creates_issue(self) -> None:
+        from convergent.health import HealthChecker
+
+        backend = PythonGraphBackend()
+        # Intent with conflicts → stability drops below 0.3 (base 0.3 - 0.15*2 = 0.0)
+        i = Intent(
+            agent_id="a1",
+            intent="weak intent",
+            provides=[InterfaceSpec(name="Foo", kind=InterfaceKind.FUNCTION, signature="")],
+            evidence=[
+                Evidence(kind=EvidenceKind.CONFLICT, description="c1"),
+                Evidence(kind=EvidenceKind.CONFLICT, description="c2"),
+            ],
+        )
+        backend.publish(i)
+        resolver = IntentResolver(backend=backend)
+
+        checker = HealthChecker(resolver=resolver)
+        health = checker.check()
+        assert health.intent_graph.avg_stability < 0.3
+        assert any("stability" in issue.lower() for issue in health.issues)
+
+
+class TestHealthLowMarkerStrength:
+    """Cover health.py:212 — low avg marker strength triggers issue."""
+
+    def test_low_marker_strength_creates_issue(self) -> None:
+        from convergent.health import HealthChecker
+        from convergent.stigmergy import StigmergyField
+
+        stig = StigmergyField(":memory:")
+        stig.leave_marker("a1", "test", "target1", "context")
+
+        # Directly update strength to very low value
+        stig._conn.execute("UPDATE stigmergy_markers SET strength = 0.05")
+        stig._conn.commit()
+
+        checker = HealthChecker(stigmergy=stig)
+        health = checker.check()
+        assert health.stigmergy.avg_strength < 0.2
+        assert any("marker strength" in issue.lower() for issue in health.issues)
+
+
+class TestHealthHighEscalationRate:
+    """Cover health.py:295 — high escalation rate triggers issue."""
+
+    def test_high_escalation_rate_creates_issue(self) -> None:
+        from convergent.health import HealthChecker
+        from convergent.score_store import ScoreStore
+
+        store = ScoreStore(":memory:")
+        # Insert 5+ decisions with >30% escalated
+        decisions = [
+            ("r1", "t1", "q?", "escalated", "2025-01-01T00:00:00Z", "{}"),
+            ("r2", "t2", "q?", "escalated", "2025-01-02T00:00:00Z", "{}"),
+            ("r3", "t3", "q?", "approved", "2025-01-03T00:00:00Z", "{}"),
+            ("r4", "t4", "q?", "approved", "2025-01-04T00:00:00Z", "{}"),
+            ("r5", "t5", "q?", "approved", "2025-01-05T00:00:00Z", "{}"),
+        ]
+        store._conn.executemany(
+            "INSERT INTO decisions "
+            "(request_id, task_id, question, outcome, decided_at, decision_json) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            decisions,
+        )
+        store._conn.commit()
+
+        checker = HealthChecker(store=store)
+        health = checker.check()
+        # 2/5 escalated = 40% > 30% threshold
+        assert any("escalation" in issue.lower() for issue in health.issues)
+
+
+class TestGovernorHardFailInPublish:
+    """Cover governor.py:195-196 — HARD_FAIL in evaluate_publish."""
+
+    def test_hard_fail_blocks_publish(self) -> None:
+        class AlwaysHardFail(ResolutionPolicy):
+            def classify_provision_conflict(
+                self, my_stability: float, their_stability: float
+            ) -> ConflictClass:
+                return ConflictClass.HARD_FAIL
+
+        backend = PythonGraphBackend()
+        resolver = IntentResolver(backend=backend, min_stability=0.0)
+
+        spec = _make_spec(tags=["auth", "users"])
+        existing = _make_intent(
+            agent_id="agent-existing",
+            intent_text="existing",
+            provides=[spec],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass"), Evidence.code_committed("c")],
+        )
+        resolver.publish(existing)
+
+        new_spec = _make_spec(tags=["auth", "users"])
+        new_intent = _make_intent(
+            agent_id="agent-new",
+            intent_text="new",
+            provides=[new_spec],
+            stability=0.5,
+            evidence=[Evidence.test_pass("pass"), Evidence.code_committed("c")],
+        )
+
+        governor = MergeGovernor(policy=AlwaysHardFail())
+        verdict = governor.evaluate_publish(new_intent, resolver)
+
+        assert not verdict.approved
+        assert verdict.kind == VerdictKind.BLOCKED_BY_CONFLICT
+        assert any("Hard fail" in r for r in verdict.blocking_reasons)
+
+
+class TestScoringNaiveDatetime:
+    """Cover scoring.py:180 — naive datetime gets UTC tzinfo."""
+
+    def test_naive_timestamp_normalized_to_utc(self) -> None:
+        from convergent.score_store import ScoreStore
+        from convergent.scoring import PhiScorer
+
+        store = ScoreStore(":memory:")
+        scorer = PhiScorer(store=store)
+
+        # Insert outcome with naive timestamp (no +00:00)
+        store._conn.execute(
+            "INSERT INTO outcomes (agent_id, skill_domain, outcome, timestamp) VALUES (?, ?, ?, ?)",
+            ("agent-1", "testing", "approved", "2025-01-01T00:00:00"),
+        )
+        store._conn.commit()
+
+        # _recalculate should handle the naive datetime without error
+        score = scorer._recalculate("agent-1", "testing")
+        assert 0.0 < score < 1.0
+
+
+class TestSignalBackendPathTraversal:
+    """Cover signal_backend.py:131 — path traversal guard."""
+
+    def test_path_traversal_raises_error(self) -> None:
+        import tempfile
+
+        import pytest
+        from convergent.protocol import Signal
+        from convergent.signal_backend import FilesystemSignalBackend
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            from pathlib import Path
+
+            signals_dir = Path(tmpdir) / "signals"
+            backend = FilesystemSignalBackend(signals_dir)
+
+            # Use type with extra component so traversal escapes signals dir:
+            # filename = "ts_x/../../evil_agent.json"
+            # components: signals/ → ts_x/ → ../ → ../ → evil_agent.json
+            # resolves to parent of signals → guard triggers
+            signal = Signal(
+                signal_type="x/../../evil",
+                source_agent="agent-1",
+                payload={"key": "value"},
+            )
+
+            # Bypass sanitization to allow path traversal characters through
+            with (
+                patch(
+                    "convergent.signal_backend._sanitize_filename_component",
+                    side_effect=lambda x: x,
+                ),
+                pytest.raises(ValueError, match="outside signals directory"),
+            ):
+                backend.store_signal(signal)
+
+
+class TestStigmergyNaiveDatetime:
+    """Cover stigmergy.py:213 — naive datetime gets UTC tzinfo in evaporation."""
+
+    def test_naive_created_at_normalized(self) -> None:
+        from convergent.stigmergy import StigmergyField
+
+        stig = StigmergyField(":memory:")
+        stig.leave_marker("a1", "test", "target", "context")
+
+        # Overwrite created_at with naive datetime (no timezone)
+        stig._conn.execute("UPDATE stigmergy_markers SET created_at = '2025-01-01T00:00:00'")
+        stig._conn.commit()
+
+        # evaporate() should handle naive datetime without error
+        stig.evaporate()
+
+
+class TestEvidenceToDict:
+    """Cover intent.py:134 — Evidence.to_dict() serialization."""
+
+    def test_to_dict_structure(self) -> None:
+        e = Evidence(kind=EvidenceKind.TEST_PASS, description="all tests pass")
+        d = e.to_dict()
+        assert d["kind"] == "test_pass"
+        assert d["description"] == "all tests pass"
+
+    def test_to_dict_roundtrip(self) -> None:
+        for kind in EvidenceKind:
+            e = Evidence(kind=kind, description=f"test {kind.value}")
+            d = e.to_dict()
+            assert d["kind"] == kind.value
+            assert d["description"] == f"test {kind.value}"
+
+
+class TestTypedConstraintToBase:
+    """Cover constraints.py:84 — TypedConstraint.to_base_constraint()."""
+
+    def test_converts_to_base(self) -> None:
+        from convergent.constraints import TypedConstraint
+
+        tc = TypedConstraint(
+            target="User model",
+            requirement="must have email",
+            severity="critical",
+            affects_tags=["user", "model"],
+        )
+        base = tc.to_base_constraint()
+        assert base.target == "User model"
+        assert base.requirement == "must have email"
+        assert base.severity == "critical"
+        assert base.affects_tags == ["user", "model"]
+
+
+class TestGateResultProperties:
+    """Cover constraints.py:122,126 — GateResult property methods."""
+
+    def test_total_checks_and_counts(self) -> None:
+        from convergent.constraints import (
+            ConstraintCheckResult,
+            ConstraintKind,
+            GateResult,
+        )
+
+        results = [
+            ConstraintCheckResult(
+                constraint_id="c1", constraint_kind=ConstraintKind.TYPE_CHECK, satisfied=True
+            ),
+            ConstraintCheckResult(
+                constraint_id="c2", constraint_kind=ConstraintKind.TYPE_CHECK, satisfied=False
+            ),
+            ConstraintCheckResult(
+                constraint_id="c3", constraint_kind=ConstraintKind.TYPE_CHECK, satisfied=True
+            ),
+        ]
+        gate = GateResult(intent_id="test-1", passed=False, check_results=results)
+        assert gate.total_checks == 3
+        assert gate.satisfied_count == 2
+        assert gate.violated_count == 1
+
+
+class TestEscalationDecisionAutoResolveSavings:
+    """Cover economics.py:145 — savings for AUTO_RESOLVE."""
+
+    def test_auto_resolve_savings(self) -> None:
+        d = EscalationDecision(
+            action=EscalationAction.AUTO_RESOLVE,
+            expected_cost_auto=0.5,
+            expected_cost_escalate=2.0,
+            confidence=0.9,
+            reasoning="cheap auto",
+        )
+        assert d.savings == 1.5  # escalate - auto = 2.0 - 0.5
+
+
+class TestCostReportNonZero:
+    """Cover economics.py:305,313 — non-zero total rate/cost."""
+
+    def test_auto_resolve_rate_with_data(self) -> None:
+        report = CoordinationCostReport()
+        report.total_auto_resolved = 3
+        report.total_resolves = 3
+        report.total_escalations = 2
+        assert report.auto_resolve_rate == 3 / 5
+
+    def test_cost_per_decision_with_data(self) -> None:
+        report = CoordinationCostReport()
+        report.total_cost = 10.0
+        report.total_resolves = 3
+        report.total_escalations = 2
+        assert report.cost_per_decision == 2.0
