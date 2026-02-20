@@ -1,4 +1,8 @@
-# Convergent
+# Convergent (Archived)
+
+> **This repo has been consolidated into the [Animus monorepo](https://github.com/AreteDriver/animus) as `packages/quorum/` (Animus Quorum).** All future development happens there. The PyPI package (`convergentAI`) and import name (`import convergent`) are unchanged.
+
+---
 
 Coordination library for multi-agent AI systems. Agents share an intent graph, detect overlaps before building, and converge on compatible outputs — eliminating rework cycles from parallel code generation.
 
