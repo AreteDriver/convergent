@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771496825427,
+  "lastUpdate": 1771579137451,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -785,6 +785,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 620629,
             "range": "± 6359",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "email": "AreteDriver@users.noreply.github.com",
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "distinct": true,
+          "id": "78172f8de7d8fae277f961a560afeb10f5f3fdb6",
+          "message": "chore: add gitleaks configuration\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-02-20T01:15:13-08:00",
+          "tree_id": "11264a2af15a434a052e3958e2e3185ac7003d1f",
+          "url": "https://github.com/AreteDriver/convergent/commit/78172f8de7d8fae277f961a560afeb10f5f3fdb6"
+        },
+        "date": 1771579137127,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 225025,
+            "range": "± 3050",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2877827,
+            "range": "± 21881",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 194865,
+            "range": "± 9209",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 740894,
+            "range": "± 9391",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 610813,
+            "range": "± 4127",
             "unit": "ns/iter"
           }
         ]
