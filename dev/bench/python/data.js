@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771579136420,
+  "lastUpdate": 1775768576097,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -1032,6 +1032,68 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0005274023724158555",
             "extra": "mean: 1.2563034136549245 msec\nrounds: 747"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "e667b612f40660e3ec7f5b6c9f48917da7e0b309",
+          "message": "chore(deps): update rusqlite requirement from 0.38 to 0.39",
+          "timestamp": "2026-04-09T20:57:46Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/20/commits/e667b612f40660e3ec7f5b6c9f48917da7e0b309"
+        },
+        "date": 1775768575616,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 726.8020220059057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000018053771243336086",
+            "extra": "mean: 1.3758905034965276 msec\nrounds: 572"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 285.14495562133914,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00006198767255942169",
+            "extra": "mean: 3.506988218749902 msec\nrounds: 288"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 205879.83377903624,
+            "unit": "iter/sec",
+            "range": "stddev: 4.833851071301789e-7",
+            "extra": "mean: 4.857202289531988 usec\nrounds: 63943"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 106210.79966269765,
+            "unit": "iter/sec",
+            "range": "stddev: 7.797479054545934e-7",
+            "extra": "mean: 9.415238404905923 usec\nrounds: 39672"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 221.33750356867122,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000765768709367299",
+            "extra": "mean: 4.517987163841596 msec\nrounds: 177"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 869.6528065312987,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008113411704649849",
+            "extra": "mean: 1.1498841750291187 msec\nrounds: 857"
           }
         ]
       }
