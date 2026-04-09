@@ -186,6 +186,10 @@ ruff check python/ tests/ && ruff format --check python/ tests/
 - **v0.5.0**: Coordination protocol (triumvirate voting, stigmergy, flocking, signal bus)
 - **v0.4.0**: CLI inspector, async backend, Rust backend parity
 
+## Community
+
+[Discord](https://discord.gg/fdzQkrt8) — Join the community
+
 ## License
 
 [MIT](LICENSE)
