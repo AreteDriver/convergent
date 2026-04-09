@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771579137451,
+  "lastUpdate": 1775768577491,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -839,6 +839,56 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 610813,
             "range": "± 4127",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "e667b612f40660e3ec7f5b6c9f48917da7e0b309",
+          "message": "chore(deps): update rusqlite requirement from 0.38 to 0.39",
+          "timestamp": "2026-04-09T20:57:46Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/20/commits/e667b612f40660e3ec7f5b6c9f48917da7e0b309"
+        },
+        "date": 1775768577162,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 192051,
+            "range": "± 2703",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2694230,
+            "range": "± 11895",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 184748,
+            "range": "± 4177",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 683888,
+            "range": "± 9321",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 558214,
+            "range": "± 5241",
             "unit": "ns/iter"
           }
         ]
