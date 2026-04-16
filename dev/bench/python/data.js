@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775768576097,
+  "lastUpdate": 1776334468269,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -1094,6 +1094,68 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0008113411704649849",
             "extra": "mean: 1.1498841750291187 msec\nrounds: 857"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "committer": {
+            "name": "AreteDriver",
+            "username": "AreteDriver"
+          },
+          "id": "ac7f938ca4f3dad6dff6d010c649b2dd2203d291",
+          "message": "chore(deps): bump softprops/action-gh-release from 2 to 3",
+          "timestamp": "2026-04-09T20:57:46Z",
+          "url": "https://github.com/AreteDriver/convergent/pull/21/commits/ac7f938ca4f3dad6dff6d010c649b2dd2203d291"
+        },
+        "date": 1776334467981,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 714.7572550653932,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000017889143878374632",
+            "extra": "mean: 1.3990763897996528 msec\nrounds: 549"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 289.2241938184814,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005806225830754491",
+            "extra": "mean: 3.457525412371294 msec\nrounds: 291"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 183758.84659467678,
+            "unit": "iter/sec",
+            "range": "stddev: 7.676407257238341e-7",
+            "extra": "mean: 5.44191487121017 usec\nrounds: 52168"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86242.41357062815,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013331797847679998",
+            "extra": "mean: 11.595222798131116 usec\nrounds: 24888"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 217.30767846953097,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00035214023967618816",
+            "extra": "mean: 4.601770204545311 msec\nrounds: 176"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 808.0265673761799,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007851039286638252",
+            "extra": "mean: 1.2375830701299777 msec\nrounds: 770"
           }
         ]
       }
