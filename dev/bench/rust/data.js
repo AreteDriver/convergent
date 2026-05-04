@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775768577491,
+  "lastUpdate": 1777866794011,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -889,6 +889,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 558214,
             "range": "± 5241",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d2427026c0486c4973ffe06433f23551a8111a1b",
+          "message": "chore(deps): update rusqlite requirement from 0.38 to 0.39 (#20)\n\nUpdates the requirements on [rusqlite](https://github.com/rusqlite/rusqlite) to permit the latest version.\n- [Release notes](https://github.com/rusqlite/rusqlite/releases)\n- [Changelog](https://github.com/rusqlite/rusqlite/blob/master/Changelog.md)\n- [Commits](https://github.com/rusqlite/rusqlite/compare/v0.38.0...v0.39.0)\n\n---\nupdated-dependencies:\n- dependency-name: rusqlite\n  dependency-version: 0.39.0\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-03T20:48:42-07:00",
+          "tree_id": "c5a4a68c1e145d41ccd44c6746b1095d62334cd0",
+          "url": "https://github.com/AreteDriver/convergent/commit/d2427026c0486c4973ffe06433f23551a8111a1b"
+        },
+        "date": 1777866793444,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 224582,
+            "range": "± 1706",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2840185,
+            "range": "± 176140",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 194913,
+            "range": "± 1273",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 749444,
+            "range": "± 4987",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 620515,
+            "range": "± 3958",
             "unit": "ns/iter"
           }
         ]
