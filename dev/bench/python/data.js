@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777866792216,
+  "lastUpdate": 1777877456823,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -1222,6 +1222,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007226734813454783",
             "extra": "mean: 1.2776802713902693 msec\nrounds: 748"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "04e28ae46a6c47db14228dfdd0a20fd39820145f",
+          "message": "chore(deps): bump softprops/action-gh-release from 2 to 3 (#21)\n\nBumps [softprops/action-gh-release](https://github.com/softprops/action-gh-release) from 2 to 3.\n- [Release notes](https://github.com/softprops/action-gh-release/releases)\n- [Changelog](https://github.com/softprops/action-gh-release/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/softprops/action-gh-release/compare/v2...v3)\n\n---\nupdated-dependencies:\n- dependency-name: softprops/action-gh-release\n  dependency-version: '3'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-03T23:47:29-07:00",
+          "tree_id": "b3cd1ee3953d8cf54dbda31d256c4d78b8895df4",
+          "url": "https://github.com/AreteDriver/convergent/commit/04e28ae46a6c47db14228dfdd0a20fd39820145f"
+        },
+        "date": 1777877456260,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 714.2586616008829,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00002321367009076779",
+            "extra": "mean: 1.4000530252705359 msec\nrounds: 554"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 288.69206443533074,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00003387220280693079",
+            "extra": "mean: 3.463898468965391 msec\nrounds: 290"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 180076.8784527222,
+            "unit": "iter/sec",
+            "range": "stddev: 8.113594466525382e-7",
+            "extra": "mean: 5.553183776797543 usec\nrounds: 58669"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 86541.47704770541,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011544891051045246",
+            "extra": "mean: 11.555152906030903 usec\nrounds: 44184"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 215.17098039397266,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00005734745069131781",
+            "extra": "mean: 4.647466857143213 msec\nrounds: 175"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 796.7591107257394,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008147937704257615",
+            "extra": "mean: 1.2550844873165437 msec\nrounds: 749"
           }
         ]
       }
