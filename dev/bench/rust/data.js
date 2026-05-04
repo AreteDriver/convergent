@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777866794011,
+  "lastUpdate": 1777877458373,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Rust Benchmarks": [
@@ -943,6 +943,60 @@ window.BENCHMARK_DATA = {
             "name": "find_overlapping_100_intents",
             "value": 620515,
             "range": "± 3958",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "04e28ae46a6c47db14228dfdd0a20fd39820145f",
+          "message": "chore(deps): bump softprops/action-gh-release from 2 to 3 (#21)\n\nBumps [softprops/action-gh-release](https://github.com/softprops/action-gh-release) from 2 to 3.\n- [Release notes](https://github.com/softprops/action-gh-release/releases)\n- [Changelog](https://github.com/softprops/action-gh-release/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/softprops/action-gh-release/compare/v2...v3)\n\n---\nupdated-dependencies:\n- dependency-name: softprops/action-gh-release\n  dependency-version: '3'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-03T23:47:29-07:00",
+          "tree_id": "b3cd1ee3953d8cf54dbda31d256c4d78b8895df4",
+          "url": "https://github.com/AreteDriver/convergent/commit/04e28ae46a6c47db14228dfdd0a20fd39820145f"
+        },
+        "date": 1777877457924,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "publish_single_intent",
+            "value": 187913,
+            "range": "± 1725",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "publish_100_intents",
+            "value": 2700966,
+            "range": "± 57168",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "query_all_100_intents",
+            "value": 191093,
+            "range": "± 3421",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "resolve_with_50_existing",
+            "value": 703245,
+            "range": "± 5474",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "find_overlapping_100_intents",
+            "value": 582327,
+            "range": "± 6179",
             "unit": "ns/iter"
           }
         ]
