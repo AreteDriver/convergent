@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776334468269,
+  "lastUpdate": 1777866792216,
   "repoUrl": "https://github.com/AreteDriver/convergent",
   "entries": {
     "Python Benchmarks": [
@@ -1156,6 +1156,72 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0007851039286638252",
             "extra": "mean: 1.2375830701299777 msec\nrounds: 770"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d2427026c0486c4973ffe06433f23551a8111a1b",
+          "message": "chore(deps): update rusqlite requirement from 0.38 to 0.39 (#20)\n\nUpdates the requirements on [rusqlite](https://github.com/rusqlite/rusqlite) to permit the latest version.\n- [Release notes](https://github.com/rusqlite/rusqlite/releases)\n- [Changelog](https://github.com/rusqlite/rusqlite/blob/master/Changelog.md)\n- [Commits](https://github.com/rusqlite/rusqlite/compare/v0.38.0...v0.39.0)\n\n---\nupdated-dependencies:\n- dependency-name: rusqlite\n  dependency-version: 0.39.0\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-05-03T20:48:42-07:00",
+          "tree_id": "c5a4a68c1e145d41ccd44c6746b1095d62334cd0",
+          "url": "https://github.com/AreteDriver/convergent/commit/d2427026c0486c4973ffe06433f23551a8111a1b"
+        },
+        "date": 1777866791403,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/test_benchmarks.py::TestResolverBenchmark::test_resolve_50_intents",
+            "value": 685.7107954961641,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000022331759342798614",
+            "extra": "mean: 1.4583407561440296 msec\nrounds: 529"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestStructuralOverlapBenchmark::test_structural_overlaps_1000",
+            "value": 282.1904064764709,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000033756365897735084",
+            "extra": "mean: 3.5437065791369493 msec\nrounds: 278"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestConstraintBenchmark::test_validate_20_constraints",
+            "value": 189519.9727224196,
+            "unit": "iter/sec",
+            "range": "stddev: 8.52165974653057e-7",
+            "extra": "mean: 5.276488729051528 usec\nrounds: 52125"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPhiScoringBenchmark::test_phi_score_100_outcomes",
+            "value": 83788.61423184942,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000012285607595018817",
+            "extra": "mean: 11.934795785414526 usec\nrounds: 45746"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestRealisticScenarioBenchmark::test_realistic_25_agents",
+            "value": 201.4577088749125,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00004857447590688452",
+            "extra": "mean: 4.963820970588482 msec\nrounds: 170"
+          },
+          {
+            "name": "tests/test_benchmarks.py::TestPublishThroughputBenchmark::test_publish_100_intents",
+            "value": 782.6684205680662,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007226734813454783",
+            "extra": "mean: 1.2776802713902693 msec\nrounds: 748"
           }
         ]
       }
